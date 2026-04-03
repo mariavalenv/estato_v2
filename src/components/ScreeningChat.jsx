@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ArrowUp, Check } from 'lucide-react'
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -137,7 +138,7 @@ function UserBubble({ message }) {
   )
 }
 
-function CompletionCard({ profile }) {
+function CompletionCard({ profile, onContinue }) {
   const fields = [
     { label: 'City', value: profile.city || '—' },
     { label: 'Budget', value: formatBudget(profile.budget) },
@@ -195,7 +196,7 @@ function CompletionCard({ profile }) {
 
       {/* CTA */}
       <button
-        onClick={() => console.log('Find my matches →', profile)}
+        onClick={onContinue}
         style={{
           width: '100%',
           padding: '12px 0',
@@ -220,6 +221,7 @@ function CompletionCard({ profile }) {
 /* ── Main component ──────────────────────────────────────────── */
 
 export function ScreeningChat() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -419,7 +421,7 @@ export function ScreeningChat() {
 
           {screeningState === 'complete' && profile && (
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 32 }}>
-              <CompletionCard profile={profile} />
+              <CompletionCard profile={profile} onContinue={() => navigate('/dashboard')} />
             </div>
           )}
 
