@@ -4205,8 +4205,6 @@ function LandlordFlow({ onClose, onPost, user, profile, initialListing }) {
     []
   );
 
-  const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMsgs, chatLoading]);
@@ -4216,11 +4214,6 @@ function LandlordFlow({ onClose, onPost, user, profile, initialListing }) {
     setStep("analyzing");
     setProgressLabel("Extracting frames from your walkthrough…");
     setProgressPct(10);
-
-    if (!API_KEY) {
-      setAnalysisError("API key missing — add VITE_ANTHROPIC_API_KEY to your .env file.");
-      return;
-    }
 
     let extracted;
     try {
@@ -4236,14 +4229,9 @@ function LandlordFlow({ onClose, onPost, user, profile, initialListing }) {
     setProgressPct(58);
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1200,
@@ -4354,14 +4342,9 @@ When you have location + price + rent/sale intent, you have everything needed. G
 Keep responses to 2-3 lines max. Be friendly and professional.`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 900,
@@ -6128,30 +6111,9 @@ export default function App() {
   const isFavourited = (propertyId) => favourites.some(f => f.listing_id === propertyId);
 
   const callClaude = useCallback(async (history, userPrefs = null) => {
-    // ─────────────────────────────────────────────────────────────────
-    // 🔑 API KEY — TWO OPTIONS:
-    //
-    // LOCAL DEV: replace "" with your key:
-    //   const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "sk-ant-...";
-    //
-    // VERCEL (production): add env variable VITE_ANTHROPIC_API_KEY in
-    //   Vercel Dashboard → Project → Settings → Environment Variables
-    //   then redeploy. The line below picks it up automatically.
-    //
-    // ⚠️  Never commit your real key to GitHub.
-    // ─────────────────────────────────────────────────────────────────
-    const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
-
-    if (!ANTHROPIC_API_KEY) throw new Error("API key missing — see the comment in App.jsx for setup instructions.");
-
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("/api/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1200, system: buildSystemPrompt(userPrefs), messages: history })
     });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || "API error"); }
