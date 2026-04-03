@@ -1,0 +1,135 @@
+[
+  {
+    "timestamp": "2026-03-05T19:48:00",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-05T19:48:00",
+    "dry_run": false,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-05T19:48:04",
+    "dry_run": false,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-05T19:48:05",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-05T19:50:05",
+    "dry_run": false,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-05T20:38:53",
+    "dry_run": false,
+    "status": "error",
+    "equity": 0.0,
+    "simulated": false,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-06T10:33:11",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-08T09:01:35",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-09T10:26:28",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-10T11:05:59",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-12T00:27:59",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  },
+  {
+    "timestamp": "2026-03-15T15:17:49",
+    "dry_run": true,
+    "status": "error",
+    "equity": 0.0,
+    "poly_macro_score": 0.0,
+    "signals": [],
+    "allocations": {},
+    "orders": [],
+    "error": "('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')"
+  }
+]

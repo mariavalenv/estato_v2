@@ -1,0 +1,47 @@
+[
+  {
+    "timestamp": "2026-03-09T12:26:04",
+    "dry_run": false,
+    "status": "market_closed",
+    "market_open": false,
+    "equity": 0.0,
+    "simulated": false,
+    "daily_pnl": 0.0,
+    "daily_pnl_pct": 0.0,
+    "kill_switch": false,
+    "intraday_signals": {},
+    "pairs_signals": [],
+    "allocations": {},
+    "orders": []
+  },
+  {
+    "timestamp": "2026-03-09T12:26:06",
+    "dry_run": false,
+    "status": "market_closed",
+    "market_open": false,
+    "equity": 0.0,
+    "simulated": false,
+    "daily_pnl": 0.0,
+    "daily_pnl_pct": 0.0,
+    "kill_switch": false,
+    "intraday_signals": {},
+    "pairs_signals": [],
+    "allocations": {},
+    "orders": []
+  },
+  {
+    "timestamp": "2026-03-09T12:26:07",
+    "dry_run": false,
+    "status": "market_closed",
+    "market_open": false,
+    "equity": 0.0,
+    "simulated": false,
+    "daily_pnl": 0.0,
+    "daily_pnl_pct": 0.0,
+    "kill_switch": false,
+    "intraday_signals": {},
+    "pairs_signals": [],
+    "allocations": {},
+    "orders": []
+  }
+]
