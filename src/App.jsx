@@ -6235,32 +6235,32 @@ export default function App() {
   const dk = colorScheme === "dark";
   const compact = density === "compact";
   const T = {
-    bg:          dk ? "#0c0c0c" : "#f5f2ec",
-    surface:     dk ? "#141414" : "#ffffff",
-    surfaceHover:dk ? "#1c1c1c" : "#faf8f4",
-    sidebar:     dk ? "#0f0f0f" : "#ffffff",
-    text:        dk ? "#f0f0f0" : "#1a1410",
-    textSub:     dk ? "rgba(255,255,255,0.45)" : "#9a8f80",
-    textMuted:   dk ? "rgba(255,255,255,0.22)" : "#b8b0a0",
-    border:      dk ? "rgba(255,255,255,0.07)" : "#ede8de",
-    borderStrong:dk ? "rgba(255,255,255,0.12)" : "#d5c9b0",
-    gold:        "#c9a84c",
-    goldDim:     dk ? "rgba(201,168,76,0.12)" : "#fdf8ee",
-    navActive:   dk ? "rgba(201,168,76,0.1)" : "#f5edd8",
-    navActiveText:dk ? "#c9a84c" : "#7a5520",
-    navText:     dk ? "rgba(255,255,255,0.45)" : "#8a8070",
-    navIcon:     dk ? "rgba(255,255,255,0.3)" : "#b0a090",
-    chatBg:      dk ? "#0c0c0c" : "#faf8f4",
-    inputBg:     dk ? "#1c1c1c" : "#ffffff",
+    bg: dk ? "#0c0c0c" : "#f5f2ec",
+    surface: dk ? "#141414" : "#ffffff",
+    surfaceHover: dk ? "#1c1c1c" : "#faf8f4",
+    sidebar: dk ? "#0f0f0f" : "#ffffff",
+    text: dk ? "#f0f0f0" : "#1a1410",
+    textSub: dk ? "rgba(255,255,255,0.45)" : "#9a8f80",
+    textMuted: dk ? "rgba(255,255,255,0.22)" : "#b8b0a0",
+    border: dk ? "rgba(255,255,255,0.07)" : "#ede8de",
+    borderStrong: dk ? "rgba(255,255,255,0.12)" : "#d5c9b0",
+    gold: "#c9a84c",
+    goldDim: dk ? "rgba(201,168,76,0.12)" : "#fdf8ee",
+    navActive: dk ? "rgba(201,168,76,0.1)" : "#f5edd8",
+    navActiveText: dk ? "#c9a84c" : "#7a5520",
+    navText: dk ? "rgba(255,255,255,0.45)" : "#8a8070",
+    navIcon: dk ? "rgba(255,255,255,0.3)" : "#b0a090",
+    chatBg: dk ? "#0c0c0c" : "#faf8f4",
+    inputBg: dk ? "#1c1c1c" : "#ffffff",
     inputBorder: dk ? "rgba(255,255,255,0.1)" : "#ede8de",
-    shadow:      dk ? "0 2px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.04)",
+    shadow: dk ? "0 2px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.04)",
     shadowHover: dk ? "0 8px 32px rgba(0,0,0,0.6)" : "0 8px 24px rgba(0,0,0,0.1)",
-    sidebarW:    compact ? 64 : 216,
-    rightW:      compact ? 0 : 272,
-    cardPad:     compact ? "8px 10px" : "12px 14px",
-    gridCols:    compact ? "repeat(auto-fill, minmax(100%, 1fr))" : "repeat(auto-fill, minmax(260px, 1fr))",
-    msgGap:      compact ? 6 : 14,
-    imgH:        compact ? 64 : 160,
+    sidebarW: compact ? 64 : 216,
+    rightW: compact ? 0 : 272,
+    cardPad: compact ? "8px 10px" : "12px 14px",
+    gridCols: compact ? "repeat(auto-fill, minmax(100%, 1fr))" : "repeat(auto-fill, minmax(260px, 1fr))",
+    msgGap: compact ? 6 : 14,
+    imgH: compact ? 64 : 160,
   };
 
   // Browse listings — filtered from userPrefs directly, no chat needed
@@ -6281,8 +6281,8 @@ export default function App() {
 
   return (
     <ThemeCtx.Provider value={T}>
-    <div style={{ fontFamily: "'DM Sans', sans-serif", height: "100vh", display: "flex", background: T.bg, overflow: "hidden", transition: "background 0.2s" }}>
-      <style>{`
+      <div style={{ fontFamily: "'DM Sans', sans-serif", height: "100vh", display: "flex", background: T.bg, overflow: "hidden", transition: "background 0.2s" }}>
+        <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; }
@@ -6296,678 +6296,678 @@ export default function App() {
         button { font-family:'DM Sans',sans-serif; }
       `}</style>
 
-      {/* ══ LEFT NAV ══════════════════════════════════════════════════════════ */}
-      <div style={{
-        width: T.sidebarW, flexShrink: 0, background: T.sidebar,
-        borderRight: `1px solid ${T.border}`,
-        display: "flex", flexDirection: "column",
-        padding: compact ? "0 6px 16px" : "0 10px 20px",
-        transition: "width 0.2s ease", overflow: "hidden",
-      }}>
-        <div style={{ padding: compact ? "16px 0 14px" : "20px 6px 18px", borderBottom: `1px solid ${T.border}`, marginBottom: 10, textAlign: compact ? "center" : "left" }}>
-          {compact ? (
-            <div style={{ fontSize: 18, fontWeight: 700, color: T.gold }}>E</div>
-          ) : (
-            <>
-              <div style={{ fontSize: 19, fontWeight: 700, color: T.text, letterSpacing: "-0.5px" }}>
-                Est<span style={{ color: T.gold }}>ato</span>
-              </div>
-              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Real Estate Platform</div>
-            </>
-          )}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <NavItem icon="home" label="Properties" active={activeNav === "properties"} onClick={() => setActiveNav("properties")} compact={compact} />
-          <NavItem icon="chat" label="Alex (Agent)" active={activeNav === "chat"} onClick={() => setActiveNav("chat")} badge={shownProperties.length} compact={compact} />
-          <NavItem icon="heart" label="Favourites" active={activeNav === "favourites"} onClick={() => setActiveNav("favourites")} compact={compact} />
-          <NavItem icon="people" label="Flatmates" active={activeNav === "flatmates"} onClick={() => setActiveNav("flatmates")} compact={compact} />
-          <NavItem icon="messages" label="Messages" active={activeNav === "messages"} onClick={() => setActiveNav("messages")} badge={directConversations.reduce((s, c) => s + (c.unread || 0), 0) || undefined} compact={compact} />
-          <NavItem icon="shorts" label="Shorts" active={activeNav === "shorts"} onClick={() => setActiveNav("shorts")} badge={userListings.length || undefined} compact={compact} />
-
-          {/* ── Conversation History — hidden in compact ── */}
-          {!compact && savedConversations.length > 0 && (
-            <div style={{ marginTop: 8 }}>
-              <button onClick={() => setShowHistory(h => !h)} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                width: "100%", padding: "8px 12px", background: "none", border: "none",
-                cursor: "pointer", color: T.textSub, fontSize: 11, fontWeight: 600,
-                letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif"
-              }}>
-                Recent Chats
-                <span style={{ transform: showHistory ? "rotate(180deg)" : "none", transition: "transform 0.2s", display: "inline-block" }}>▾</span>
-              </button>
-              {showHistory && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 2 }}>
-                  {savedConversations.map(c => (
-                    <div key={c.id}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 6,
-                        padding: "7px 10px", borderRadius: 7, cursor: "pointer",
-                        background: conversationId === c.id ? T.navActive : "transparent",
-                        border: "none",
-                      }}>
-                      <div onClick={() => {
-                        setConversationId(c.id);
-                        setMessages(c.messages || []);
-                        setRecommendations(c.recommendations || []);
-                        setSummaryText(c.summary || "");
-                        setChatStarted(true);
-                        setActiveNav("chat");
-                        setShowHistory(false);
-                      }} style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          fontSize: 12, color: conversationId === c.id ? T.navActiveText : T.text,
-                          fontWeight: conversationId === c.id ? 600 : 400,
-                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                          fontFamily: "'DM Sans', sans-serif"
-                        }}>{c.preview}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{formatRelTime(c.updatedAt)}</div>
-                      </div>
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        deleteConversation(c.id);
-                        setSavedConversations(loadConversations());
-                        if (conversationId === c.id) {
-                          setMessages([]); setRecommendations([]); setSummaryText("");
-                          setChatStarted(false); setConversationId(null);
-                        }
-                      }} style={{
-                        background: "none", border: "none", cursor: "pointer",
-                        color: T.textMuted, padding: "2px 3px", borderRadius: 4,
-                        fontSize: 13, lineHeight: 1, flexShrink: 0,
-                        fontFamily: "'DM Sans', sans-serif"
-                      }} title="Delete">✕</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div style={{ marginTop: "auto" }}>
-          {/* ── Tenant / Landlord mode toggle ── */}
-          {!compact && (
-            <div style={{ paddingLeft: 4, paddingRight: 4, marginBottom: 12 }}>
-              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, paddingLeft: 2 }}>Mode</div>
-              <div style={{
-                display: "flex", background: dk ? "rgba(255,255,255,0.05)" : "#f0ebe0",
-                borderRadius: 20, padding: 3, position: "relative",
-              }}>
-                <div style={{
-                  position: "absolute", top: 3, bottom: 3,
-                  left: landlordMode ? "calc(50% + 1.5px)" : "3px",
-                  width: "calc(50% - 4.5px)",
-                  background: T.surface, borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-                  transition: "left 0.2s ease",
-                  pointerEvents: "none",
-                }} />
-                {["Tenant", "Landlord"].map(label => (
-                  <button key={label} onClick={() => setLandlordMode(label === "Landlord")} style={{
-                    flex: 1, padding: "7px 0", border: "none",
-                    background: "transparent", borderRadius: 16,
-                    fontSize: 12,
-                    fontWeight: (label === "Landlord") === landlordMode ? 700 : 500,
-                    color: (label === "Landlord") === landlordMode ? T.text : T.textSub,
-                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                    position: "relative", zIndex: 1,
-                    transition: "color 0.2s",
-                  }}>{label}</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Account Type chips — hidden in compact ── */}
-          {!compact && (
-            <div style={{ opacity: landlordMode ? 0.35 : 1, pointerEvents: landlordMode ? "none" : "auto", transition: "opacity 0.2s" }}>
-              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, paddingLeft: 6 }}>Account Type</div>
-              {(() => {
-                const roleLabel = { renting: "Renter", buying: "Buyer", investing: "Investor" }[userPrefs?.intent] || "Buyer";
-                return [roleLabel, "Agent"].map(type => (
-                  <button key={type} style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    width: "100%", padding: "9px 12px", borderRadius: 8, marginBottom: 4,
-                    background: type === roleLabel ? T.navActive : "transparent",
-                    border: type === roleLabel ? `1px solid ${T.borderActive}` : "1px solid transparent",
-                    cursor: "pointer", fontSize: 13,
-                    fontWeight: type === roleLabel ? 600 : 400,
-                    color: type === roleLabel ? T.navActiveText : T.textMuted
-                  }}>
-                    {type === roleLabel && <span style={{ color: T.gold, fontSize: 11 }}>✓</span>}
-                    {type}
-                  </button>
-                ));
-              })()}
-            </div>
-          )}
-
-          <div style={{ marginTop: compact ? 0 : 4 }}>
-            <NavItem icon="settings" label={user ? (profile?.full_name?.split(" ")[0] || "Account") : "Sign In"} active={activeNav === "account"} onClick={() => user ? setActiveNav("account") : setShowAuthModal(true)} compact={compact} />
-          </div>
-        </div>
-      </div>
-
-      {/* ══ MAIN ══════════════════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-
-        {/* Top bar */}
+        {/* ══ LEFT NAV ══════════════════════════════════════════════════════════ */}
         <div style={{
-          padding: "13px 20px", background: T.surface,
-          borderBottom: `1px solid ${T.border}`,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          flexShrink: 0, transition: "background 0.2s",
+          width: T.sidebarW, flexShrink: 0, background: T.sidebar,
+          borderRight: `1px solid ${T.border}`,
+          display: "flex", flexDirection: "column",
+          padding: compact ? "0 6px 16px" : "0 10px 20px",
+          transition: "width 0.2s ease", overflow: "hidden",
         }}>
-          <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.text }}>
-              {activeNav === "properties"
-                ? <><span style={{ fontWeight: 400, color: T.textSub }}>Browse</span> {userPrefs ? "your matches" : "all properties"}</>
-                : chatStarted && shownProperties.length > 0
-                  ? <><span style={{ fontWeight: 400, color: T.textSub }}>Alex found</span> {shownProperties.length} properties</>
-                  : "Chat with Alex"}
-            </h1>
-            {activeNav === "properties" && (
-              <div style={{ fontSize: 12, color: T.textSub, marginTop: 3 }}>
-                {browseListings.length} listings {userPrefs ? "matching your profile" : "available"}
-              </div>
-            )}
-            {activeNav !== "properties" && chatStarted && shownProperties.length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-                <span style={{ fontSize: 12, color: T.textSub }}>
-                  {shownProperties.length} matched of {LISTINGS.length.toLocaleString()} listings
-                </span>
-                <div style={{ width: 120, height: 3, background: T.border, borderRadius: 2 }}>
-                  <div style={{ width: `${(shownProperties.length / LISTINGS.length) * 100}%`, height: "100%", background: T.gold, borderRadius: 2 }} />
-                </div>
-              </div>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {chatStarted && (
-              <button onClick={() => { setChatStarted(false); setMessages([]); setRecommendations([]); setSummaryText(""); setConversationId(null); }}
-                style={{
-                  padding: "7px 14px", borderRadius: 20, border: `1px solid ${T.border}`,
-                  background: T.surface, cursor: "pointer", fontSize: 12, color: T.textSub,
-                  display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s"
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
-                onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
-              >↺ New Search</button>
-            )}
-            {(shownProperties.length > 0 || browseListings.length > 0) && (
-              <button onClick={() => { setSwipeStartIndex(0); setSwipeMode(true); }} style={{
-                padding: "7px 14px", borderRadius: 20, border: `1px solid ${T.gold}`,
-                background: T.goldDim, cursor: "pointer", fontSize: 12, color: T.navActiveText,
-                display: "flex", alignItems: "center", gap: 5, fontWeight: 600
-              }}>
-                🃏 Swipe
-              </button>
-            )}
-            {/* Density toggle */}
-            <button onClick={() => setDensity(d => d === "compact" ? "comfortable" : "compact")}
-              title={compact ? "Comfortable view" : "Compact view"}
-              style={{
-                width: 34, height: 34, borderRadius: 8, border: `1px solid ${T.border}`,
-                background: T.surface, cursor: "pointer", color: T.textSub,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
-            >{compact ? "⊞" : "☰"}</button>
-            {/* Theme toggle */}
-            <button onClick={() => setColorScheme(s => s === "light" ? "dark" : "light")}
-              title={dk ? "Light mode" : "Dark mode"}
-              style={{
-                width: 34, height: 34, borderRadius: 8, border: `1px solid ${T.border}`,
-                background: T.surface, cursor: "pointer", color: T.textSub,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
-            >{dk ? "☀" : "🌙"}</button>
-          </div>
-        </div>
-
-        {/* Body: chat + right sidebar */}
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-
-          {/* ── Properties browse panel ── */}
-          {activeNav === "properties" && (
-            <div style={{ flex: 1, overflowY: "auto", padding: compact ? "16px 16px" : "24px 28px", background: T.chatBg }}>
-              {userPrefs && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-                  {[
-                    userPrefs.intent && `${{ buying: "🏡 Buying", renting: "🔑 Renting", investing: "📈 Investing" }[userPrefs.intent]}`,
-                    userPrefs.budget_max && `💰 Up to £${Math.round(userPrefs.budget_max / 1000)}k`,
-                    ...(userPrefs.cities?.slice(0, 3).map(c => `📍 ${c}`) || []),
-                    userPrefs.types?.length && `🏠 ${userPrefs.types.join(", ")}`,
-                  ].filter(Boolean).map(tag => (
-                    <span key={tag} style={{ padding: "4px 10px", borderRadius: 20, background: T.goldDim, border: `1px solid ${T.borderActive ?? T.gold}`, fontSize: 12, color: T.navActiveText, fontWeight: 500 }}>{tag}</span>
-                  ))}
-                  <span style={{ padding: "4px 10px", borderRadius: 20, background: T.surface, border: `1px solid ${T.border}`, fontSize: 12, color: T.textSub }}>{browseListings.length} properties</span>
-                </div>
-              )}
-              <div style={{ display: "grid", gridTemplateColumns: T.gridCols, gap: compact ? 8 : 16 }}>
-                {browseListings.map(p => (
-                  compact ? (
-                    /* Compact list row */
-                    <div key={p.id} onClick={() => setSelectedProperty(p)} style={{
-                      background: T.surface, borderRadius: 10, overflow: "hidden",
-                      border: `1px solid ${T.border}`, cursor: "pointer",
-                      display: "flex", alignItems: "center", gap: 0,
-                      transition: "box-shadow 0.15s",
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.boxShadow = T.shadowHover}
-                      onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
-                    >
-                      <img src={p.image} alt={p.title} style={{ width: 80, height: 64, objectFit: "cover", flexShrink: 0 }} />
-                      <div style={{ flex: 1, padding: "8px 12px", minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</div>
-                        <div style={{ fontSize: 11, color: T.textSub, display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
-                          <Svg d={I.pin} size={9} stroke={T.gold} />{p.location}
-                        </div>
-                      </div>
-                      <div style={{ padding: "8px 12px", flexShrink: 0, textAlign: "right" }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>{formatPrice(p.price, p.currency, p.isForRent)}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.bedrooms}bd · {p.bathrooms}ba</div>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Comfortable tile */
-                    <div key={p.id} onClick={() => setSelectedProperty(p)} style={{
-                      background: T.surface, borderRadius: 14, overflow: "hidden",
-                      border: `1px solid ${T.border}`, cursor: "pointer",
-                      transition: "box-shadow 0.15s, transform 0.15s",
-                      boxShadow: T.shadow,
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadowHover; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.boxShadow = T.shadow; e.currentTarget.style.transform = "none"; }}
-                    >
-                      <div style={{ position: "relative" }}>
-                        <img src={p.image} alt={p.title} style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
-                        {p._userListing
-                          ? <div style={{ position: "absolute", top: 10, left: 10, background: "#5a8a4a", color: "#fff", padding: "3px 9px", borderRadius: 5, fontSize: 10, fontWeight: 700 }}>Owner listed</div>
-                          : p.tag && <div style={{ position: "absolute", top: 10, left: 10, background: T.gold, color: "#fff", padding: "3px 9px", borderRadius: 5, fontSize: 10, fontWeight: 700 }}>{p.tag}</div>
-                        }
-                        <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 5 }}>
-                          <button onClick={e => { e.stopPropagation(); setSharingListing(p); }} style={{
-                            width: 28, height: 28, borderRadius: "50%",
-                            background: "rgba(0,0,0,0.45)", border: "none", cursor: "pointer",
-                            fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
-                          }} title="Share">↗</button>
-                          <button onClick={e => { e.stopPropagation(); toggleFavourite(p); }} style={{
-                            width: 28, height: 28, borderRadius: "50%",
-                            background: "rgba(0,0,0,0.45)", border: "none", cursor: "pointer",
-                            fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", color: isFavourited(p.id) ? "#e74c3c" : "#fff",
-                          }}>{isFavourited(p.id) ? "♥" : "♡"}</button>
-                        </div>
-                      </div>
-                      <div style={{ padding: T.cardPad }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</div>
-                        <div style={{ fontSize: 11, color: T.textSub, marginBottom: 8, display: "flex", alignItems: "center", gap: 3 }}>
-                          <Svg d={I.pin} size={10} stroke={T.gold} />{p.location}
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: T.gold }}>{formatPrice(p.price, p.currency, p.isForRent)}</div>
-                          <div style={{ display: "flex", gap: 10, fontSize: 11, color: T.textSub }}>
-                            <span>{p.bedrooms} bd</span>
-                            <span>{p.bathrooms} ba</span>
-                            <span>{p.sqft?.toLocaleString()} ft²</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Chat */}
-          <div style={{ flex: 1, display: activeNav === "properties" ? "none" : "flex", flexDirection: "column", minWidth: 0, background: T.chatBg }}>
-            {!chatStarted ? (
-              /* Welcome */
-              <div style={{
-                flex: 1, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                padding: 40, textAlign: "center", animation: "fadeIn 0.4s ease",
-                background: T.chatBg,
-              }}>
-                <div style={{
-                  width: 68, height: 68, borderRadius: "50%",
-                  background: "linear-gradient(135deg, #c9a84c, #8b6520)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 30, marginBottom: 18,
-                  boxShadow: "0 8px 24px rgba(201,168,76,0.2)"
-                }}>🧑‍💼</div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, marginBottom: 8 }}>
-                  {userPrefs ? `Welcome back${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}` : "Meet Alex"}
-                </h2>
-                <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 360, marginBottom: userPrefs ? 16 : 24 }}>
-                  {userPrefs
-                    ? "Alex has read your profile and has properties ready for you. Hit the button and he'll go straight to recommendations."
-                    : "Your personal AI estate consultant. Alex will hold a real conversation to understand your life, then surface properties that truly fit."
-                  }
-                </p>
-                {userPrefs && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 24, maxWidth: 420 }}>
-                    {[
-                      userPrefs.intent && `${{ "buying": "🏡 Buying", "renting": "🔑 Renting", "investing": "📈 Investing" }[userPrefs.intent] || userPrefs.intent}`,
-                      userPrefs.budget_max && `💰 Up to £${Math.round(userPrefs.budget_max / 1000)}k`,
-                      ...(userPrefs.cities?.slice(0, 2).map(c => `📍 ${c}`) || []),
-                      userPrefs.commute_destination && `🚇 ${userPrefs.commute_destination}`,
-                      userPrefs.timeline && `⏱ ${userPrefs.timeline}`,
-                    ].filter(Boolean).map(tag => (
-                      <span key={tag} style={{ padding: "5px 12px", borderRadius: 20, background: T.goldDim, border: `1px solid ${T.gold}33`, fontSize: 12, color: T.navActiveText, fontWeight: 500 }}>{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {!userPrefs && (
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 28 }}>
-                    {["20 years experience", "Luxury specialist", "Global portfolio", "Brutally honest"].map(tag => (
-                      <span key={tag} style={{ padding: "5px 13px", borderRadius: 20, background: T.surface, border: `1px solid ${T.border}`, fontSize: 12, color: T.textSub }}>{tag}</span>
-                    ))}
-                  </div>
-                )}
-                <button onClick={() => startChat(userPrefs, !userPrefs)} style={{
-                  padding: "13px 36px",
-                  background: "linear-gradient(135deg, #c9a84c, #8b6520)",
-                  border: "none", borderRadius: 10, cursor: "pointer",
-                  color: "#fff", fontSize: 14, fontWeight: 600,
-                  boxShadow: "0 4px 16px rgba(201,168,76,0.3)",
-                  transition: "all 0.2s"
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(201,168,76,0.4)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(201,168,76,0.3)"; }}
-                >
-                  {userPrefs ? "Show me properties →" : "Begin Consultation"}
-                </button>
-              </div>
+          <div style={{ padding: compact ? "16px 0 14px" : "20px 6px 18px", borderBottom: `1px solid ${T.border}`, marginBottom: 10, textAlign: compact ? "center" : "left" }}>
+            {compact ? (
+              <div style={{ fontSize: 18, fontWeight: 700, color: T.gold }}>E</div>
             ) : (
               <>
-                {/* Messages */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "22px 24px 16px", background: T.chatBg }}>
-                  <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: T.msgGap }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, color: T.textMuted }}>
-                      <div style={{ flex: 1, height: 1, background: T.border }} />
-                      <span>Consultation started with Alex</span>
-                      <div style={{ flex: 1, height: 1, background: T.border }} />
-                    </div>
-
-                    {visibleMsgs.map((msg, i) => (
-                      <div key={i} style={{
-                        display: "flex",
-                        flexDirection: msg.role === "user" ? "row-reverse" : "row",
-                        gap: 9, alignItems: "flex-end",
-                        animation: "slideUp 0.3s ease both"
-                      }}>
-                        {msg.role === "assistant" && (
-                          <div style={{
-                            width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                            background: "linear-gradient(135deg, #c9a84c, #8b6520)",
-                            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15
-                          }}>🧑‍💼</div>
-                        )}
-                        <div style={{
-                          maxWidth: "74%", padding: "12px 16px",
-                          borderRadius: msg.role === "assistant" ? "4px 14px 14px 14px" : "14px 4px 14px 14px",
-                          background: msg.role === "assistant" ? T.surface : "linear-gradient(135deg, #c9a84c, #8b6520)",
-                          border: msg.role === "assistant" ? `1px solid ${T.border}` : "none",
-                          fontSize: 14, lineHeight: 1.7,
-                          color: msg.role === "user" ? "#fff" : T.text,
-                          boxShadow: msg.role === "assistant" ? T.shadow : "0 2px 8px rgba(201,168,76,0.25)",
-                          whiteSpace: "pre-wrap", wordBreak: "break-word"
-                        }}>
-                          {msg.display || msg.content}
-                        </div>
-                        {msg.role === "user" && (
-                          <div style={{
-                            width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                            background: T.goldDim, border: `1.5px solid ${T.border}`,
-                            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15
-                          }}>👤</div>
-                        )}
-                      </div>
-                    ))}
-
-                    {isLoading && <TypingIndicator />}
-                    {error && (
-                      <div style={{
-                        padding: "10px 14px", borderRadius: 8,
-                        background: T.goldDim, border: `1px solid ${T.gold}44`,
-                        fontSize: 13, color: T.navActiveText
-                      }}>⚠ {error}</div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
+                <div style={{ fontSize: 19, fontWeight: 700, color: T.text, letterSpacing: "-0.5px" }}>
+                  Est<span style={{ color: T.gold }}>ato</span>
                 </div>
-
-                {/* Input */}
-                <div style={{ padding: "14px 24px 16px", borderTop: `1px solid ${T.border}`, background: T.surface, flexShrink: 0 }}>
-                  {summaryText && (
-                    <div style={{ fontSize: 12, color: T.textSub, fontStyle: "italic", marginBottom: 10, paddingLeft: 2, display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ color: T.gold, fontSize: 10 }}>◆</span>
-                      {summaryText}
-                    </div>
-                  )}
-                  <div style={{ display: "flex", gap: 10, alignItems: "flex-end", maxWidth: 640 }}>
-                    <textarea
-                      ref={inputRef}
-                      value={input}
-                      onChange={e => setInput(e.target.value)}
-                      onKeyDown={handleKey}
-                      placeholder="Message Alex…"
-                      rows={2}
-                      style={{
-                        flex: 1, padding: "11px 15px",
-                        background: T.inputBg, border: `1.5px solid ${T.inputBorder}`,
-                        borderRadius: 12, fontSize: 14, color: T.text,
-                        lineHeight: 1.5, maxHeight: 120, transition: "border-color 0.15s"
-                      }}
-                      onFocus={e => e.target.style.borderColor = T.gold}
-                      onBlur={e => e.target.style.borderColor = T.inputBorder}
-                    />
-                    <button onClick={sendMessage} disabled={isLoading || !input.trim()} style={{
-                      width: 44, height: 44, borderRadius: 12, flexShrink: 0, border: "none",
-                      background: input.trim() && !isLoading ? "linear-gradient(135deg,#c9a84c,#8b6520)" : T.border,
-                      cursor: input.trim() && !isLoading ? "pointer" : "not-allowed",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "all 0.2s"
-                    }}>
-                      <Svg d={I.send} size={15} stroke={input.trim() && !isLoading ? "#fff" : T.textMuted} />
-                    </button>
-                  </div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6, paddingLeft: 2 }}>
-                    Enter to send · Shift+Enter for new line
-                  </div>
-                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Real Estate Platform</div>
               </>
             )}
           </div>
 
-          {/* ══ RIGHT SIDEBAR ══════════════════════════════════════════════════ */}
-          {!compact && (
-            <div style={{
-              width: T.rightW, flexShrink: 0, background: T.surface,
-              borderLeft: `1px solid ${T.border}`,
-              display: "flex", flexDirection: "column", overflow: "hidden",
-              transition: "width 0.2s ease",
-            }}>
-              <div style={{ padding: "15px 16px 12px", borderBottom: `1px solid ${T.border}` }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.text }}>Alex's Picks</div>
-                <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
-                  {shownProperties.length > 0
-                    ? `${shownProperties.length} propert${shownProperties.length !== 1 ? "ies" : "y"} matched`
-                    : "Properties appear as you chat"}
-                </div>
-              </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <NavItem icon="home" label="Properties" active={activeNav === "properties"} onClick={() => setActiveNav("properties")} compact={compact} />
+            <NavItem icon="chat" label="Alex (Agent)" active={activeNav === "chat"} onClick={() => setActiveNav("chat")} badge={shownProperties.length} compact={compact} />
+            <NavItem icon="heart" label="Favourites" active={activeNav === "favourites"} onClick={() => setActiveNav("favourites")} compact={compact} />
+            <NavItem icon="people" label="Flatmates" active={activeNav === "flatmates"} onClick={() => setActiveNav("flatmates")} compact={compact} />
+            <NavItem icon="messages" label="Messages" active={activeNav === "messages"} onClick={() => setActiveNav("messages")} badge={directConversations.reduce((s, c) => s + (c.unread || 0), 0) || undefined} compact={compact} />
+            <NavItem icon="shorts" label="Shorts" active={activeNav === "shorts"} onClick={() => setActiveNav("shorts")} badge={userListings.length || undefined} compact={compact} />
 
-              <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
-                {shownProperties.length === 0 ? (
-                  <div style={{
-                    display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center",
-                    height: "200px", textAlign: "center", padding: 20
-                  }}>
-                    <div style={{ fontSize: 36, marginBottom: 12 }}>🏡</div>
-                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6 }}>
-                      Matched properties will appear here as Alex gets to know you.
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {shownProperties.map((p, i) => (
-                      <SidebarCard
-                        key={p.id}
-                        property={p}
-                        matchScore={p.matchScore}
-                        reason={p.reason}
-                        isTop={i === 0}
-                        isFavourited={isFavourited(p.id)}
-                        onFavourite={() => toggleFavourite(p)}
-                        onShare={setSharingListing}
-                        onClick={() => setSelectedProperty(p)}
-                      />
+            {/* ── Conversation History — hidden in compact ── */}
+            {!compact && savedConversations.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <button onClick={() => setShowHistory(h => !h)} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", padding: "8px 12px", background: "none", border: "none",
+                  cursor: "pointer", color: T.textSub, fontSize: 11, fontWeight: 600,
+                  letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif"
+                }}>
+                  Recent Chats
+                  <span style={{ transform: showHistory ? "rotate(180deg)" : "none", transition: "transform 0.2s", display: "inline-block" }}>▾</span>
+                </button>
+                {showHistory && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 2 }}>
+                    {savedConversations.map(c => (
+                      <div key={c.id}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "7px 10px", borderRadius: 7, cursor: "pointer",
+                          background: conversationId === c.id ? T.navActive : "transparent",
+                          border: "none",
+                        }}>
+                        <div onClick={() => {
+                          setConversationId(c.id);
+                          setMessages(c.messages || []);
+                          setRecommendations(c.recommendations || []);
+                          setSummaryText(c.summary || "");
+                          setChatStarted(true);
+                          setActiveNav("chat");
+                          setShowHistory(false);
+                        }} style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 12, color: conversationId === c.id ? T.navActiveText : T.text,
+                            fontWeight: conversationId === c.id ? 600 : 400,
+                            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                            fontFamily: "'DM Sans', sans-serif"
+                          }}>{c.preview}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{formatRelTime(c.updatedAt)}</div>
+                        </div>
+                        <button onClick={(e) => {
+                          e.stopPropagation();
+                          deleteConversation(c.id);
+                          setSavedConversations(loadConversations());
+                          if (conversationId === c.id) {
+                            setMessages([]); setRecommendations([]); setSummaryText("");
+                            setChatStarted(false); setConversationId(null);
+                          }
+                        }} style={{
+                          background: "none", border: "none", cursor: "pointer",
+                          color: T.textMuted, padding: "2px 3px", borderRadius: 4,
+                          fontSize: 13, lineHeight: 1, flexShrink: 0,
+                          fontFamily: "'DM Sans', sans-serif"
+                        }} title="Delete">✕</button>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
+            )}
+          </div>
 
-              {shownProperties.length > 0 && (
-                <div style={{ padding: "12px 16px", borderTop: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 12, color: T.textSub, textAlign: "center" }}>
-                    Click any property to view details
+          <div style={{ marginTop: "auto" }}>
+            {/* ── Tenant / Landlord mode toggle ── */}
+            {!compact && (
+              <div style={{ paddingLeft: 4, paddingRight: 4, marginBottom: 12 }}>
+                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, paddingLeft: 2 }}>Mode</div>
+                <div style={{
+                  display: "flex", background: dk ? "rgba(255,255,255,0.05)" : "#f0ebe0",
+                  borderRadius: 20, padding: 3, position: "relative",
+                }}>
+                  <div style={{
+                    position: "absolute", top: 3, bottom: 3,
+                    left: landlordMode ? "calc(50% + 1.5px)" : "3px",
+                    width: "calc(50% - 4.5px)",
+                    background: T.surface, borderRadius: 16,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+                    transition: "left 0.2s ease",
+                    pointerEvents: "none",
+                  }} />
+                  {["Tenant", "Landlord"].map(label => (
+                    <button key={label} onClick={() => setLandlordMode(label === "Landlord")} style={{
+                      flex: 1, padding: "7px 0", border: "none",
+                      background: "transparent", borderRadius: 16,
+                      fontSize: 12,
+                      fontWeight: (label === "Landlord") === landlordMode ? 700 : 500,
+                      color: (label === "Landlord") === landlordMode ? T.text : T.textSub,
+                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                      position: "relative", zIndex: 1,
+                      transition: "color 0.2s",
+                    }}>{label}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Account Type chips — hidden in compact ── */}
+            {!compact && (
+              <div style={{ opacity: landlordMode ? 0.35 : 1, pointerEvents: landlordMode ? "none" : "auto", transition: "opacity 0.2s" }}>
+                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, paddingLeft: 6 }}>Account Type</div>
+                {(() => {
+                  const roleLabel = { renting: "Renter", buying: "Buyer", investing: "Investor" }[userPrefs?.intent] || "Buyer";
+                  return [roleLabel, "Agent"].map(type => (
+                    <button key={type} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      width: "100%", padding: "9px 12px", borderRadius: 8, marginBottom: 4,
+                      background: type === roleLabel ? T.navActive : "transparent",
+                      border: type === roleLabel ? `1px solid ${T.borderActive}` : "1px solid transparent",
+                      cursor: "pointer", fontSize: 13,
+                      fontWeight: type === roleLabel ? 600 : 400,
+                      color: type === roleLabel ? T.navActiveText : T.textMuted
+                    }}>
+                      {type === roleLabel && <span style={{ color: T.gold, fontSize: 11 }}>✓</span>}
+                      {type}
+                    </button>
+                  ));
+                })()}
+              </div>
+            )}
+
+            <div style={{ marginTop: compact ? 0 : 4 }}>
+              <NavItem icon="settings" label={user ? (profile?.full_name?.split(" ")[0] || "Account") : "Sign In"} active={activeNav === "account"} onClick={() => user ? setActiveNav("account") : setShowAuthModal(true)} compact={compact} />
+            </div>
+          </div>
+        </div>
+
+        {/* ══ MAIN ══════════════════════════════════════════════════════════════ */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+
+          {/* Top bar */}
+          <div style={{
+            padding: "13px 20px", background: T.surface,
+            borderBottom: `1px solid ${T.border}`,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            flexShrink: 0, transition: "background 0.2s",
+          }}>
+            <div>
+              <h1 style={{ fontSize: 16, fontWeight: 700, color: T.text }}>
+                {activeNav === "properties"
+                  ? <><span style={{ fontWeight: 400, color: T.textSub }}>Browse</span> {userPrefs ? "your matches" : "all properties"}</>
+                  : chatStarted && shownProperties.length > 0
+                    ? <><span style={{ fontWeight: 400, color: T.textSub }}>Alex found</span> {shownProperties.length} properties</>
+                    : "Chat with Alex"}
+              </h1>
+              {activeNav === "properties" && (
+                <div style={{ fontSize: 12, color: T.textSub, marginTop: 3 }}>
+                  {browseListings.length} listings {userPrefs ? "matching your profile" : "available"}
+                </div>
+              )}
+              {activeNav !== "properties" && chatStarted && shownProperties.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                  <span style={{ fontSize: 12, color: T.textSub }}>
+                    {shownProperties.length} matched of {LISTINGS.length.toLocaleString()} listings
+                  </span>
+                  <div style={{ width: 120, height: 3, background: T.border, borderRadius: 2 }}>
+                    <div style={{ width: `${(shownProperties.length / LISTINGS.length) * 100}%`, height: "100%", background: T.gold, borderRadius: 2 }} />
                   </div>
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {chatStarted && (
+                <button onClick={() => { setChatStarted(false); setMessages([]); setRecommendations([]); setSummaryText(""); setConversationId(null); }}
+                  style={{
+                    padding: "7px 14px", borderRadius: 20, border: `1px solid ${T.border}`,
+                    background: T.surface, cursor: "pointer", fontSize: 12, color: T.textSub,
+                    display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s"
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+                >↺ New Search</button>
+              )}
+              {(shownProperties.length > 0 || browseListings.length > 0) && (
+                <button onClick={() => { setSwipeStartIndex(0); setSwipeMode(true); }} style={{
+                  padding: "7px 14px", borderRadius: 20, border: `1px solid ${T.gold}`,
+                  background: T.goldDim, cursor: "pointer", fontSize: 12, color: T.navActiveText,
+                  display: "flex", alignItems: "center", gap: 5, fontWeight: 600
+                }}>
+                  🃏 Swipe
+                </button>
+              )}
+              {/* Density toggle */}
+              <button onClick={() => setDensity(d => d === "compact" ? "comfortable" : "compact")}
+                title={compact ? "Comfortable view" : "Compact view"}
+                style={{
+                  width: 34, height: 34, borderRadius: 8, border: `1px solid ${T.border}`,
+                  background: T.surface, cursor: "pointer", color: T.textSub,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
+              >{compact ? "⊞" : "☰"}</button>
+              {/* Theme toggle */}
+              <button onClick={() => setColorScheme(s => s === "light" ? "dark" : "light")}
+                title={dk ? "Light mode" : "Dark mode"}
+                style={{
+                  width: 34, height: 34, borderRadius: 8, border: `1px solid ${T.border}`,
+                  background: T.surface, cursor: "pointer", color: T.textSub,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
+              >{dk ? "☀" : "🌙"}</button>
+            </div>
+          </div>
 
-      {activeNav === "account" && (
-        <div style={{ position: "fixed", top: 0, left: T.sidebarW, right: 0, bottom: 0, background: T.bg, zIndex: 100, overflowY: "auto" }}>
-          {user ? (
-            <ProfilePanel user={user} profile={profile} onUpdate={setProfile} favourites={favourites} viewings={viewings} onSignOut={async () => { await auth.signOut(); setActiveNav("chat"); setUserPrefs(null); }} onEditPrefs={() => setShowOnboarding(true)} onNavigate={setActiveNav} />
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14, fontFamily: "'DM Sans', sans-serif" }}>
-              <div style={{ fontSize: 36 }}>👤</div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: T.text }}>Sign in to view your account</div>
-              <button onClick={() => setShowAuthModal(true)} style={{ padding: "10px 24px", borderRadius: 9, border: "none", background: "linear-gradient(135deg, #c9a84c, #8b6520)", color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600 }}>Sign in</button>
+          {/* Body: chat + right sidebar */}
+          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+
+            {/* ── Properties browse panel ── */}
+            {activeNav === "properties" && (
+              <div style={{ flex: 1, overflowY: "auto", padding: compact ? "16px 16px" : "24px 28px", background: T.chatBg }}>
+                {userPrefs && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                    {[
+                      userPrefs.intent && `${{ buying: "🏡 Buying", renting: "🔑 Renting", investing: "📈 Investing" }[userPrefs.intent]}`,
+                      userPrefs.budget_max && `💰 Up to £${Math.round(userPrefs.budget_max / 1000)}k`,
+                      ...(userPrefs.cities?.slice(0, 3).map(c => `📍 ${c}`) || []),
+                      userPrefs.types?.length && `🏠 ${userPrefs.types.join(", ")}`,
+                    ].filter(Boolean).map(tag => (
+                      <span key={tag} style={{ padding: "4px 10px", borderRadius: 20, background: T.goldDim, border: `1px solid ${T.borderActive ?? T.gold}`, fontSize: 12, color: T.navActiveText, fontWeight: 500 }}>{tag}</span>
+                    ))}
+                    <span style={{ padding: "4px 10px", borderRadius: 20, background: T.surface, border: `1px solid ${T.border}`, fontSize: 12, color: T.textSub }}>{browseListings.length} properties</span>
+                  </div>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: T.gridCols, gap: compact ? 8 : 16 }}>
+                  {browseListings.map(p => (
+                    compact ? (
+                      /* Compact list row */
+                      <div key={p.id} onClick={() => setSelectedProperty(p)} style={{
+                        background: T.surface, borderRadius: 10, overflow: "hidden",
+                        border: `1px solid ${T.border}`, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 0,
+                        transition: "box-shadow 0.15s",
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.boxShadow = T.shadowHover}
+                        onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+                      >
+                        <img src={p.image} alt={p.title} style={{ width: 80, height: 64, objectFit: "cover", flexShrink: 0 }} />
+                        <div style={{ flex: 1, padding: "8px 12px", minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</div>
+                          <div style={{ fontSize: 11, color: T.textSub, display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
+                            <Svg d={I.pin} size={9} stroke={T.gold} />{p.location}
+                          </div>
+                        </div>
+                        <div style={{ padding: "8px 12px", flexShrink: 0, textAlign: "right" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>{formatPrice(p.price, p.currency, p.isForRent)}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.bedrooms}bd · {p.bathrooms}ba</div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Comfortable tile */
+                      <div key={p.id} onClick={() => setSelectedProperty(p)} style={{
+                        background: T.surface, borderRadius: 14, overflow: "hidden",
+                        border: `1px solid ${T.border}`, cursor: "pointer",
+                        transition: "box-shadow 0.15s, transform 0.15s",
+                        boxShadow: T.shadow,
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadowHover; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.boxShadow = T.shadow; e.currentTarget.style.transform = "none"; }}
+                      >
+                        <div style={{ position: "relative" }}>
+                          <img src={p.image} alt={p.title} style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
+                          {p._userListing
+                            ? <div style={{ position: "absolute", top: 10, left: 10, background: "#5a8a4a", color: "#fff", padding: "3px 9px", borderRadius: 5, fontSize: 10, fontWeight: 700 }}>Owner listed</div>
+                            : p.tag && <div style={{ position: "absolute", top: 10, left: 10, background: T.gold, color: "#fff", padding: "3px 9px", borderRadius: 5, fontSize: 10, fontWeight: 700 }}>{p.tag}</div>
+                          }
+                          <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 5 }}>
+                            <button onClick={e => { e.stopPropagation(); setSharingListing(p); }} style={{
+                              width: 28, height: 28, borderRadius: "50%",
+                              background: "rgba(0,0,0,0.45)", border: "none", cursor: "pointer",
+                              fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+                            }} title="Share">↗</button>
+                            <button onClick={e => { e.stopPropagation(); toggleFavourite(p); }} style={{
+                              width: 28, height: 28, borderRadius: "50%",
+                              background: "rgba(0,0,0,0.45)", border: "none", cursor: "pointer",
+                              fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", color: isFavourited(p.id) ? "#e74c3c" : "#fff",
+                            }}>{isFavourited(p.id) ? "♥" : "♡"}</button>
+                          </div>
+                        </div>
+                        <div style={{ padding: T.cardPad }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</div>
+                          <div style={{ fontSize: 11, color: T.textSub, marginBottom: 8, display: "flex", alignItems: "center", gap: 3 }}>
+                            <Svg d={I.pin} size={10} stroke={T.gold} />{p.location}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: T.gold }}>{formatPrice(p.price, p.currency, p.isForRent)}</div>
+                            <div style={{ display: "flex", gap: 10, fontSize: 11, color: T.textSub }}>
+                              <span>{p.bedrooms} bd</span>
+                              <span>{p.bathrooms} ba</span>
+                              <span>{p.sqft?.toLocaleString()} ft²</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Chat */}
+            <div style={{ flex: 1, display: activeNav === "properties" ? "none" : "flex", flexDirection: "column", minWidth: 0, background: T.chatBg }}>
+              {!chatStarted ? (
+                /* Welcome */
+                <div style={{
+                  flex: 1, display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  padding: 40, textAlign: "center", animation: "fadeIn 0.4s ease",
+                  background: T.chatBg,
+                }}>
+                  <div style={{
+                    width: 68, height: 68, borderRadius: "50%",
+                    background: "linear-gradient(135deg, #c9a84c, #8b6520)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 30, marginBottom: 18,
+                    boxShadow: "0 8px 24px rgba(201,168,76,0.2)"
+                  }}>🧑‍💼</div>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, marginBottom: 8 }}>
+                    {userPrefs ? `Welcome back${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}` : "Meet Alex"}
+                  </h2>
+                  <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 360, marginBottom: userPrefs ? 16 : 24 }}>
+                    {userPrefs
+                      ? "Alex has read your profile and has properties ready for you. Hit the button and he'll go straight to recommendations."
+                      : "Your personal AI estate consultant. Alex will hold a real conversation to understand your life, then surface properties that truly fit."
+                    }
+                  </p>
+                  {userPrefs && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 24, maxWidth: 420 }}>
+                      {[
+                        userPrefs.intent && `${{ "buying": "🏡 Buying", "renting": "🔑 Renting", "investing": "📈 Investing" }[userPrefs.intent] || userPrefs.intent}`,
+                        userPrefs.budget_max && `💰 Up to £${Math.round(userPrefs.budget_max / 1000)}k`,
+                        ...(userPrefs.cities?.slice(0, 2).map(c => `📍 ${c}`) || []),
+                        userPrefs.commute_destination && `🚇 ${userPrefs.commute_destination}`,
+                        userPrefs.timeline && `⏱ ${userPrefs.timeline}`,
+                      ].filter(Boolean).map(tag => (
+                        <span key={tag} style={{ padding: "5px 12px", borderRadius: 20, background: T.goldDim, border: `1px solid ${T.gold}33`, fontSize: 12, color: T.navActiveText, fontWeight: 500 }}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  {!userPrefs && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 28 }}>
+                      {["20 years experience", "Luxury specialist", "Global portfolio", "Brutally honest"].map(tag => (
+                        <span key={tag} style={{ padding: "5px 13px", borderRadius: 20, background: T.surface, border: `1px solid ${T.border}`, fontSize: 12, color: T.textSub }}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => startChat(userPrefs, !userPrefs)} style={{
+                    padding: "13px 36px",
+                    background: "linear-gradient(135deg, #c9a84c, #8b6520)",
+                    border: "none", borderRadius: 10, cursor: "pointer",
+                    color: "#fff", fontSize: 14, fontWeight: 600,
+                    boxShadow: "0 4px 16px rgba(201,168,76,0.3)",
+                    transition: "all 0.2s"
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(201,168,76,0.4)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(201,168,76,0.3)"; }}
+                  >
+                    {userPrefs ? "Show me properties →" : "Begin Consultation"}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Messages */}
+                  <div style={{ flex: 1, overflowY: "auto", padding: "22px 24px 16px", background: T.chatBg }}>
+                    <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: T.msgGap }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, color: T.textMuted }}>
+                        <div style={{ flex: 1, height: 1, background: T.border }} />
+                        <span>Consultation started with Alex</span>
+                        <div style={{ flex: 1, height: 1, background: T.border }} />
+                      </div>
+
+                      {visibleMsgs.map((msg, i) => (
+                        <div key={i} style={{
+                          display: "flex",
+                          flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                          gap: 9, alignItems: "flex-end",
+                          animation: "slideUp 0.3s ease both"
+                        }}>
+                          {msg.role === "assistant" && (
+                            <div style={{
+                              width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                              background: "linear-gradient(135deg, #c9a84c, #8b6520)",
+                              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15
+                            }}>🧑‍💼</div>
+                          )}
+                          <div style={{
+                            maxWidth: "74%", padding: "12px 16px",
+                            borderRadius: msg.role === "assistant" ? "4px 14px 14px 14px" : "14px 4px 14px 14px",
+                            background: msg.role === "assistant" ? T.surface : "linear-gradient(135deg, #c9a84c, #8b6520)",
+                            border: msg.role === "assistant" ? `1px solid ${T.border}` : "none",
+                            fontSize: 14, lineHeight: 1.7,
+                            color: msg.role === "user" ? "#fff" : T.text,
+                            boxShadow: msg.role === "assistant" ? T.shadow : "0 2px 8px rgba(201,168,76,0.25)",
+                            whiteSpace: "pre-wrap", wordBreak: "break-word"
+                          }}>
+                            {msg.display || msg.content}
+                          </div>
+                          {msg.role === "user" && (
+                            <div style={{
+                              width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                              background: T.goldDim, border: `1.5px solid ${T.border}`,
+                              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15
+                            }}>👤</div>
+                          )}
+                        </div>
+                      ))}
+
+                      {isLoading && <TypingIndicator />}
+                      {error && (
+                        <div style={{
+                          padding: "10px 14px", borderRadius: 8,
+                          background: T.goldDim, border: `1px solid ${T.gold}44`,
+                          fontSize: 13, color: T.navActiveText
+                        }}>⚠ {error}</div>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </div>
+
+                  {/* Input */}
+                  <div style={{ padding: "14px 24px 16px", borderTop: `1px solid ${T.border}`, background: T.surface, flexShrink: 0 }}>
+                    {summaryText && (
+                      <div style={{ fontSize: 12, color: T.textSub, fontStyle: "italic", marginBottom: 10, paddingLeft: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ color: T.gold, fontSize: 10 }}>◆</span>
+                        {summaryText}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-end", maxWidth: 640 }}>
+                      <textarea
+                        ref={inputRef}
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={handleKey}
+                        placeholder="Message Alex…"
+                        rows={2}
+                        style={{
+                          flex: 1, padding: "11px 15px",
+                          background: T.inputBg, border: `1.5px solid ${T.inputBorder}`,
+                          borderRadius: 12, fontSize: 14, color: T.text,
+                          lineHeight: 1.5, maxHeight: 120, transition: "border-color 0.15s"
+                        }}
+                        onFocus={e => e.target.style.borderColor = T.gold}
+                        onBlur={e => e.target.style.borderColor = T.inputBorder}
+                      />
+                      <button onClick={sendMessage} disabled={isLoading || !input.trim()} style={{
+                        width: 44, height: 44, borderRadius: 12, flexShrink: 0, border: "none",
+                        background: input.trim() && !isLoading ? "linear-gradient(135deg,#c9a84c,#8b6520)" : T.border,
+                        cursor: input.trim() && !isLoading ? "pointer" : "not-allowed",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.2s"
+                      }}>
+                        <Svg d={I.send} size={15} stroke={input.trim() && !isLoading ? "#fff" : T.textMuted} />
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6, paddingLeft: 2 }}>
+                      Enter to send · Shift+Enter for new line
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+
+            {/* ══ RIGHT SIDEBAR ══════════════════════════════════════════════════ */}
+            {!compact && (
+              <div style={{
+                width: T.rightW, flexShrink: 0, background: T.surface,
+                borderLeft: `1px solid ${T.border}`,
+                display: "flex", flexDirection: "column", overflow: "hidden",
+                transition: "width 0.2s ease",
+              }}>
+                <div style={{ padding: "15px 16px 12px", borderBottom: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text }}>Alex's Picks</div>
+                  <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
+                    {shownProperties.length > 0
+                      ? `${shownProperties.length} propert${shownProperties.length !== 1 ? "ies" : "y"} matched`
+                      : "Properties appear as you chat"}
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
+                  {shownProperties.length === 0 ? (
+                    <div style={{
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      height: "200px", textAlign: "center", padding: 20
+                    }}>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>🏡</div>
+                      <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6 }}>
+                        Matched properties will appear here as Alex gets to know you.
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      {shownProperties.map((p, i) => (
+                        <SidebarCard
+                          key={p.id}
+                          property={p}
+                          matchScore={p.matchScore}
+                          reason={p.reason}
+                          isTop={i === 0}
+                          isFavourited={isFavourited(p.id)}
+                          onFavourite={() => toggleFavourite(p)}
+                          onShare={setSharingListing}
+                          onClick={() => setSelectedProperty(p)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {shownProperties.length > 0 && (
+                  <div style={{ padding: "12px 16px", borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 12, color: T.textSub, textAlign: "center" }}>
+                      Click any property to view details
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      )}
-      {activeNav === "flatmates" && (
-        <FlatmatesPanel userPrefs={userPrefs} user={user} onConnect={(flatmate) => addConversation(flatmate, "flatmate")} userConvsCount={directConversations.filter(c => c.type === "flatmate").length} />
-      )}
-      {activeNav === "messages" && (
-        <MessagesPanel
-          conversations={directConversations}
-          onSend={sendDirectMessage}
-          onMarkRead={markConvRead}
-        />
-      )}
-      {activeNav === "shorts" && (
-        <ListingsShortsPanel
-          userListings={userListings}
-          onAddListing={addUserListing}
-          isFavourited={isFavourited}
-          onFavourite={toggleFavourite}
-          onSelect={(p) => { setSelectedProperty(p); setActiveNav("chat"); }}
-          onShare={setSharingListing}
-          userPrefs={userPrefs}
-          favourites={favourites}
-          sharedListings={sharedListings}
-          user={user}
-          profile={profile}
-        />
-      )}
-      {activeNav === "favourites" && (
-        <div style={{ position: "fixed", top: 0, left: T.sidebarW, right: 0, bottom: 0, background: T.bg, zIndex: 100, overflowY: "auto" }}>
-          {!user ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14, fontFamily: "'DM Sans', sans-serif" }}>
-              <div style={{ fontSize: 36 }}>🔐</div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: T.text }}>Sign in to save favourites</div>
-              <button onClick={() => setShowAuthModal(true)} style={{ padding: "10px 24px", borderRadius: 9, border: "none", background: "linear-gradient(135deg, #c9a84c, #8b6520)", color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600 }}>Sign in</button>
-            </div>
-          ) : (
-            <FavouritesPanel
-              favourites={favourites}
-              viewings={viewings}
-              onSelect={(p) => { setSelectedProperty(p); setActiveNav("chat"); }}
-              onRemove={async (id) => { await db.removeFavourite(user.id, id); setFavourites(await db.getFavourites(user.id)); }}
-              onCancelViewing={async (id) => { await db.updateViewingStatus(id, "cancelled"); setViewings(await db.getViewings(user.id)); }}
-              onDeleteViewing={async (id) => { await db.deleteViewing(id); setViewings(await db.getViewings(user.id)); }}
-              onConfirmViewing={async (id) => { await db.updateViewingStatus(id, "confirmed"); setViewings(await db.getViewings(user.id)); }}
-            />
-          )}
-        </div>
-      )}
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onSuccess={() => setShowAuthModal(false)} />}
-      {showPathChooser && user && (
-        <PathChooser
-          userName={profile?.full_name?.split(" ")[0] || ""}
-          onQuestionnaire={() => { setShowPathChooser(false); setShowOnboarding(true); }}
-          onAlex={() => { setShowPathChooser(false); startChat(userPrefs, true); }}
-        />
-      )}
-      {showOnboarding && user && <OnboardingForm user={user}
-        initialPrefs={userPrefs}
-        onComplete={(prefs) => {
-          const isFirstTime = !userPrefs;
-          setUserPrefs(prefs);
-          setShowOnboarding(false);
-          if (isFirstTime) { setActiveNav("chat"); startChat(prefs, false); }
-        }}
-        onSkip={() => setShowOnboarding(false)} />}
-      {profileToast && (
-        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#1a1410", color: "#fff", padding: "10px 20px", borderRadius: 20, fontSize: 13, fontFamily: "'DM Sans', sans-serif", zIndex: 9999, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.2)", animation: "fadeIn 0.2s ease" }}>
-          <span style={{ color: "#c9a84c" }}>✓</span> Profile updated by Alex
-        </div>
-      )}
-      {swipeMode && (
-        <SwipeMode
-          listings={activeNav === "properties" ? browseListings : shownProperties}
-          startIndex={swipeStartIndex}
-          onClose={() => setSwipeMode(false)}
-          isFavourited={isFavourited}
-          onFavourite={toggleFavourite}
-          userPrefs={userPrefs}
-        />
-      )}
-      {!swipeMode && selectedProperty && <PropertyModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userPrefs={userPrefs} isFavourited={isFavourited(selectedProperty?.id)} onFavourite={() => toggleFavourite(selectedProperty)} profile={profile} user={user} onSwipe={() => { const list = activeNav === "properties" ? browseListings : shownProperties; const si = list.findIndex(p => p.id === selectedProperty.id); setSwipeStartIndex(Math.max(0, si)); setSwipeMode(true); setSelectedProperty(null); }} onViewingRequest={(property) => addConversation(property, "landlord")} onShare={setSharingListing} />}
-      {sharingListing && (() => {
-        const connectionIds = loadConnections(user?.id);
-        const flatmateConnections = DUMMY_FLATMATES.filter(f => connectionIds.has(f.id));
-        return (
-          <ShareSheet
-            listing={sharingListing}
+
+        {activeNav === "account" && (
+          <div style={{ position: "fixed", top: 0, left: T.sidebarW, right: 0, bottom: 0, background: T.bg, zIndex: 100, overflowY: "auto" }}>
+            {user ? (
+              <ProfilePanel user={user} profile={profile} onUpdate={setProfile} favourites={favourites} viewings={viewings} onSignOut={async () => { await auth.signOut(); setActiveNav("chat"); setUserPrefs(null); }} onEditPrefs={() => setShowOnboarding(true)} onNavigate={setActiveNav} />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14, fontFamily: "'DM Sans', sans-serif" }}>
+                <div style={{ fontSize: 36 }}>👤</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: T.text }}>Sign in to view your account</div>
+                <button onClick={() => setShowAuthModal(true)} style={{ padding: "10px 24px", borderRadius: 9, border: "none", background: "linear-gradient(135deg, #c9a84c, #8b6520)", color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600 }}>Sign in</button>
+              </div>
+            )}
+          </div>
+        )}
+        {activeNav === "flatmates" && (
+          <FlatmatesPanel userPrefs={userPrefs} user={user} onConnect={(flatmate) => addConversation(flatmate, "flatmate")} userConvsCount={directConversations.filter(c => c.type === "flatmate").length} />
+        )}
+        {activeNav === "messages" && (
+          <MessagesPanel
             conversations={directConversations}
-            connections={flatmateConnections}
-            onSendTo={shareListingToConv}
-            onStartWith={startConversationWithListing}
-            onClose={() => setSharingListing(null)}
+            onSend={sendDirectMessage}
+            onMarkRead={markConvRead}
           />
-        );
-      })()}
+        )}
+        {activeNav === "shorts" && (
+          <ListingsShortsPanel
+            userListings={userListings}
+            onAddListing={addUserListing}
+            isFavourited={isFavourited}
+            onFavourite={toggleFavourite}
+            onSelect={(p) => { setSelectedProperty(p); setActiveNav("chat"); }}
+            onShare={setSharingListing}
+            userPrefs={userPrefs}
+            favourites={favourites}
+            sharedListings={sharedListings}
+            user={user}
+            profile={profile}
+          />
+        )}
+        {activeNav === "favourites" && (
+          <div style={{ position: "fixed", top: 0, left: T.sidebarW, right: 0, bottom: 0, background: T.bg, zIndex: 100, overflowY: "auto" }}>
+            {!user ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14, fontFamily: "'DM Sans', sans-serif" }}>
+                <div style={{ fontSize: 36 }}>🔐</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: T.text }}>Sign in to save favourites</div>
+                <button onClick={() => setShowAuthModal(true)} style={{ padding: "10px 24px", borderRadius: 9, border: "none", background: "linear-gradient(135deg, #c9a84c, #8b6520)", color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600 }}>Sign in</button>
+              </div>
+            ) : (
+              <FavouritesPanel
+                favourites={favourites}
+                viewings={viewings}
+                onSelect={(p) => { setSelectedProperty(p); setActiveNav("chat"); }}
+                onRemove={async (id) => { await db.removeFavourite(user.id, id); setFavourites(await db.getFavourites(user.id)); }}
+                onCancelViewing={async (id) => { await db.updateViewingStatus(id, "cancelled"); setViewings(await db.getViewings(user.id)); }}
+                onDeleteViewing={async (id) => { await db.deleteViewing(id); setViewings(await db.getViewings(user.id)); }}
+                onConfirmViewing={async (id) => { await db.updateViewingStatus(id, "confirmed"); setViewings(await db.getViewings(user.id)); }}
+              />
+            )}
+          </div>
+        )}
+        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onSuccess={() => setShowAuthModal(false)} />}
+        {showPathChooser && user && (
+          <PathChooser
+            userName={profile?.full_name?.split(" ")[0] || ""}
+            onQuestionnaire={() => { setShowPathChooser(false); setShowOnboarding(true); }}
+            onAlex={() => { setShowPathChooser(false); startChat(userPrefs, true); }}
+          />
+        )}
+        {showOnboarding && user && <OnboardingForm user={user}
+          initialPrefs={userPrefs}
+          onComplete={(prefs) => {
+            const isFirstTime = !userPrefs;
+            setUserPrefs(prefs);
+            setShowOnboarding(false);
+            if (isFirstTime) { setActiveNav("chat"); startChat(prefs, false); }
+          }}
+          onSkip={() => setShowOnboarding(false)} />}
+        {profileToast && (
+          <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#1a1410", color: "#fff", padding: "10px 20px", borderRadius: 20, fontSize: 13, fontFamily: "'DM Sans', sans-serif", zIndex: 9999, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.2)", animation: "fadeIn 0.2s ease" }}>
+            <span style={{ color: "#c9a84c" }}>✓</span> Profile updated by Alex
+          </div>
+        )}
+        {swipeMode && (
+          <SwipeMode
+            listings={activeNav === "properties" ? browseListings : shownProperties}
+            startIndex={swipeStartIndex}
+            onClose={() => setSwipeMode(false)}
+            isFavourited={isFavourited}
+            onFavourite={toggleFavourite}
+            userPrefs={userPrefs}
+          />
+        )}
+        {!swipeMode && selectedProperty && <PropertyModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userPrefs={userPrefs} isFavourited={isFavourited(selectedProperty?.id)} onFavourite={() => toggleFavourite(selectedProperty)} profile={profile} user={user} onSwipe={() => { const list = activeNav === "properties" ? browseListings : shownProperties; const si = list.findIndex(p => p.id === selectedProperty.id); setSwipeStartIndex(Math.max(0, si)); setSwipeMode(true); setSelectedProperty(null); }} onViewingRequest={(property) => addConversation(property, "landlord")} onShare={setSharingListing} />}
+        {sharingListing && (() => {
+          const connectionIds = loadConnections(user?.id);
+          const flatmateConnections = DUMMY_FLATMATES.filter(f => connectionIds.has(f.id));
+          return (
+            <ShareSheet
+              listing={sharingListing}
+              conversations={directConversations}
+              connections={flatmateConnections}
+              onSendTo={shareListingToConv}
+              onStartWith={startConversationWithListing}
+              onClose={() => setSharingListing(null)}
+            />
+          );
+        })()}
 
-      {/* ── Landlord Dashboard overlay ── */}
-      {landlordMode && (
-        <LandlordDashboard
-          userListings={userListings}
-          onAddListing={addUserListing}
-          onUpdateListing={updateUserListing}
-          onRemoveListing={removeUserListing}
-          user={user}
-          profile={profile}
-        />
-      )}
-    </div>
+        {/* ── Landlord Dashboard overlay ── */}
+        {landlordMode && (
+          <LandlordDashboard
+            userListings={userListings}
+            onAddListing={addUserListing}
+            onUpdateListing={updateUserListing}
+            onRemoveListing={removeUserListing}
+            user={user}
+            profile={profile}
+          />
+        )}
+      </div>
     </ThemeCtx.Provider>
   );
 }

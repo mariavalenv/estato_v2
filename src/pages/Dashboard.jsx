@@ -1,4 +1,4 @@
-import { Clock, CheckCircle2, ChevronRight } from 'lucide-react'
+import { Clock, CheckCircle2, ChevronRight, Search } from 'lucide-react'
 import { useDensity } from '../contexts/DensityContext'
 import { DensityToggle } from '../components/ui/DensityToggle'
 import { MatchCard } from '../components/ui/MatchCard'
@@ -215,6 +215,16 @@ export function Dashboard() {
         </div>
         <DensityToggle />
       </div>
+
+      {/* Start flat-hunting CTA */}
+      <button
+        onClick={() => navigate('/screening')}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-btn text-body font-semibold transition-all duration-200 hover:opacity-88 cursor-pointer"
+        style={{ background: 'var(--accent)', color: '#fff', border: 'none' }}
+      >
+        <Search size={16} />
+        Start flat-hunting
+      </button>
 
       {/* Agent status — always visible */}
       <AgentStatusCard />

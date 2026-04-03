@@ -4,6 +4,7 @@ import {
   Sparkles,
   MessageSquare,
   SlidersHorizontal,
+  Search,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -58,6 +59,18 @@ function Sidebar() {
           <NavItem key={item.to} {...item} />
         ))}
       </nav>
+
+      {/* Start flat-hunting CTA */}
+      <div className="mt-auto pt-6">
+        <NavLink
+          to="/screening"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-btn text-body font-semibold transition-all duration-200 hover:opacity-88"
+          style={{ background: 'var(--accent)', color: '#fff', textDecoration: 'none' }}
+        >
+          <Search size={15} />
+          Start flat-hunting
+        </NavLink>
+      </div>
     </aside>
   )
 }

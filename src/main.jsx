@@ -9,6 +9,7 @@ import { Onboarding } from './pages/Onboarding'
 import { Dashboard } from './pages/Dashboard'
 import { Approve } from './pages/Approve'
 import { Chat } from './pages/Chat'
+import { Screening } from './pages/Screening'
 
 function AppRoutes() {
   return (
@@ -16,9 +17,10 @@ function AppRoutes() {
       {/* Onboarding — standalone, light surface */}
       <Route path="/onboarding" element={<Onboarding />} />
 
-      {/* Chat & Approve — standalone (full-screen, no sidebar) */}
+      {/* Chat, Approve & Screening — standalone (full-screen, no sidebar) */}
       <Route path="/approve/:id" element={<Approve />} />
       <Route path="/chat/:matchId" element={<Chat />} />
+      <Route path="/screening" element={<Screening />} />
 
       {/* App shell with sidebar nav */}
       <Route
