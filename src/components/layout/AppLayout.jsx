@@ -3,15 +3,15 @@ import {
   Home,
   Sparkles,
   MessageSquare,
-  SlidersHorizontal,
+  User,
   Search,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Home',        to: '/dashboard',    Icon: Home },
-  { label: 'Matches',     to: '/matches',      Icon: Sparkles },
-  { label: 'Chats',       to: '/chat/1',       Icon: MessageSquare },
-  { label: 'Preferences', to: '/onboarding',   Icon: SlidersHorizontal },
+  { label: 'Home',    to: '/dashboard', Icon: Home },
+  { label: 'Matches', to: '/matches',   Icon: Sparkles },
+  { label: 'Chats',   to: '/chat/1',    Icon: MessageSquare },
+  { label: 'Account', to: '/account',   Icon: User },
 ]
 
 function NavItem({ label, to, Icon }) {

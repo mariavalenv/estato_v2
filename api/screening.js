@@ -25,6 +25,12 @@ QUESTION ORDER — collect these in sequence:
 9. Have they already seen flats that did not work? What was wrong with them? (this captures deal-breakers)
 10. If they are open to a shared flat: what matters to them in a flatmate? (lifestyle, cleanliness, schedule, smoker or not, pets)
 
+LIVE PROPERTY FILTER — After every regular response, append a compact <partial_profile> tag on one line containing only the fields confirmed so far (null = not yet known). This tag is stripped before display — it feeds the live property panel only. Update it as you learn more each turn:
+
+<partial_profile>{"city":null,"neighbourhoods":[],"budget":{"min":null,"max":null},"isForRent":null,"bedrooms":null,"petFriendly":null,"parking":null,"outdoor":null,"nearTransport":null}</partial_profile>
+
+Rules: "bedrooms" is an integer (0 = studio). "isForRent" is true for renting, false for buying, null if unknown. Only include <partial_profile> on regular messages, not on the <screening_complete> message.
+
 COMPLETION:
 Once you have collected all required fields, write a single warm closing sentence acknowledging you have everything you need, then immediately output the structured profile in this exact format with no additional text after it:
 
@@ -81,7 +87,15 @@ export default async function handler(req, res) {
       return res.status(upstream.status).json(data)
     }
 
-    const content = data.content?.[0]?.text ?? ''
+    const rawContent = data.content?.[0]?.text ?? ''
+
+    // Extract and strip partial_profile (present in non-final messages)
+    let partial = null
+    const partialMatch = rawContent.match(/<partial_profile>([\s\S]*?)<\/partial_profile>/)
+    if (partialMatch) {
+      try { partial = JSON.parse(partialMatch[1].trim()) } catch {}
+    }
+    const content = rawContent.replace(/<partial_profile>[\s\S]*?<\/partial_profile>/g, '').trim()
 
     // Detect completion
     const completeMatch = content.match(/<screening_complete>([\s\S]*?)<\/screening_complete>/)
@@ -96,7 +110,7 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ type: 'message', message: content })
+    return res.status(200).json({ type: 'message', message: content, partial })
   } catch (err) {
     return res.status(500).json({ error: err.message })
   }

@@ -8,6 +8,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { Landing } from './pages/Landing'
 import { Onboarding } from './pages/Onboarding'
 import { Dashboard } from './pages/Dashboard'
+import { Account } from './pages/Account'
 import { Approve } from './pages/Approve'
 import { Chat } from './pages/Chat'
 import { Screening } from './pages/Screening'
@@ -29,6 +30,14 @@ function AppRoutes() {
         element={
           <AppLayout>
             <Dashboard />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/account"
+        element={
+          <AppLayout>
+            <Account />
           </AppLayout>
         }
       />

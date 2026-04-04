@@ -80,6 +80,39 @@ a {
   animation: orb-ring 2.5s ease-out infinite;
 }
 
+/* ── Landing page ──────────────────────────────────────────── */
+@keyframes landing-orb {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  50%       { opacity: 1;    transform: scale(1.08); }
+}
+
+@keyframes l-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered entrance — apply .l-fade + one delay class */
+.l-fade {
+  opacity: 0;
+  animation: l-fade-up 0.75s ease-out forwards;
+}
+.l-d0 { animation-delay: 0ms; }
+.l-d1 { animation-delay: 80ms; }
+.l-d2 { animation-delay: 160ms; }
+.l-d3 { animation-delay: 240ms; }
+.l-d4 { animation-delay: 320ms; }
+.l-d5 { animation-delay: 400ms; }
+
+/* Primary CTA */
+.l-cta { transition: transform 250ms ease; }
+.l-cta:hover { transform: scale(1.015); }
+.l-cta:hover .l-arrow { transform: translateX(2px); }
+.l-arrow { transition: transform 250ms ease; display: inline-flex; }
+
+/* Ghost button */
+.l-ghost { transition: background 200ms ease, color 200ms ease; }
+.l-ghost:hover { background: rgba(255,255,255,0.08) !important; color: #fff !important; }
+
 /* ── Scrollbar (dark surfaces) ─────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

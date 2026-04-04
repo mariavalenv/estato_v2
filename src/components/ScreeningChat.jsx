@@ -1,12 +1,63 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowUp, Check } from 'lucide-react'
+import { ArrowUp, Check, MapPin, Bed } from 'lucide-react'
+import { supabase, db } from '../supabase'
+import { searchListings } from '../search'
 
-/* ── Helpers ─────────────────────────────────────────────────── */
+/* ── Search param helpers ────────────────────────────────────── */
+
+// Map form data (initialContext) to searchListings query
+function contextToSearchParams(ctx) {
+  if (!ctx) return {}
+  const params = {}
+  if (ctx.city) params.cities = [ctx.city]
+  if (ctx.neighbourhoods?.length) params.areas = ctx.neighbourhoods
+  if (ctx.budget?.max) params.maxPrice = ctx.budget.max
+  if (ctx.budget?.min) params.minPrice = ctx.budget.min
+  if (typeof ctx.bedrooms === 'number') params.minBeds = ctx.bedrooms
+  // Both form options (Whole flat / Room in shared flat) are rental
+  if (ctx.flatType) params.isForRent = true
+  return params
+}
+
+// Map a partial_profile (from agent mid-conversation) to searchListings query
+function partialToSearchParams(partial) {
+  if (!partial) return {}
+  const params = {}
+  if (partial.city) params.cities = [partial.city]
+  if (partial.neighbourhoods?.length) params.areas = partial.neighbourhoods
+  if (partial.budget?.max) params.maxPrice = partial.budget.max
+  if (partial.budget?.min) params.minPrice = partial.budget.min
+  if (partial.bedrooms != null) {
+    const n = typeof partial.bedrooms === 'number' ? partial.bedrooms : parseInt(partial.bedrooms)
+    if (!isNaN(n)) params.minBeds = n
+  }
+  if (partial.isForRent != null) params.isForRent = partial.isForRent
+  if (partial.petFriendly != null) params.petFriendly = partial.petFriendly
+  if (partial.parking != null) params.parking = partial.parking
+  if (partial.outdoor != null) params.outdoor = partial.outdoor
+  if (partial.nearTransport != null) params.nearTransport = partial.nearTransport
+  return params
+}
+
+// Map the final complete profile to searchListings query (includes must_haves)
+function completeProfileToSearchParams(profile) {
+  const params = partialToSearchParams(profile)
+  if (profile.must_haves?.length) {
+    const mh = profile.must_haves.map(m => m.toLowerCase())
+    if (mh.some(m => m.includes('pet'))) params.petFriendly = true
+    if (mh.some(m => m.includes('park'))) params.parking = true
+    if (mh.some(m => m.includes('balcony') || m.includes('terrace') || m.includes('garden') || m.includes('outdoor'))) params.outdoor = true
+    if (mh.some(m => m.includes('quiet'))) params.quiet = true
+    if (mh.some(m => m.includes('transport') || m.includes('metro') || m.includes('train'))) params.nearTransport = true
+  }
+  return params
+}
+
+/* ── Chat API helper ─────────────────────────────────────────── */
 
 function buildOpener(ctx) {
   if (!ctx) return 'Start screening'
-
   const lines = [
     'The user completed a quick intake form before this conversation. Here is what was already collected:',
   ]
@@ -56,11 +107,11 @@ function formatBudget(budget) {
   return '—'
 }
 
-/* ── Sub-components ──────────────────────────────────────────── */
+/* ── Chat sub-components ─────────────────────────────────────── */
 
 function TypingIndicator() {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, maxWidth: '75%' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, maxWidth: '80%' }}>
       <div style={{
         width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -81,7 +132,7 @@ function TypingIndicator() {
 
 function AgentBubble({ message }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, maxWidth: '75%' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, maxWidth: '80%' }}>
       <div style={{
         width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -105,7 +156,7 @@ function AgentBubble({ message }) {
 
 function UserBubble({ message }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto', maxWidth: '75%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto', maxWidth: '80%' }}>
       <div style={{
         padding: '12px 16px', background: 'var(--accent)',
         borderRadius: '18px 18px 4px 18px',
@@ -127,11 +178,10 @@ function CompletionCard({ profile, onContinue }) {
     { label: 'Timeline', value: profile.move_in_timeline || '—' },
     { label: 'Looking for', value: profile.flat_type || '—' },
   ]
-
   return (
     <div className="completion-fade-in" style={{
       background: 'var(--surface)', borderRadius: 12, padding: 24,
-      boxShadow: '0 4px 16px 0 rgba(0,0,0,0.16)', maxWidth: 400, width: '100%',
+      boxShadow: '0 4px 16px 0 rgba(0,0,0,0.16)', width: '100%',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <div style={{
@@ -149,7 +199,6 @@ function CompletionCard({ profile, onContinue }) {
           </p>
         </div>
       </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
         {fields.map(({ label, value }) => (
           <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
@@ -158,7 +207,6 @@ function CompletionCard({ profile, onContinue }) {
           </div>
         ))}
       </div>
-
       <button
         onClick={onContinue}
         style={{
@@ -170,8 +218,115 @@ function CompletionCard({ profile, onContinue }) {
         onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
         onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
       >
-        Find my matches
+        Go to dashboard
       </button>
+    </div>
+  )
+}
+
+/* ── Listings panel sub-components ──────────────────────────── */
+
+function ListingTile({ listing }) {
+  const price = listing.isForRent
+    ? `€${listing.price.toLocaleString()}/mo`
+    : `€${listing.price.toLocaleString()}`
+  const beds = listing.bedrooms === 0 ? 'Studio' : `${listing.bedrooms} bed${listing.bedrooms !== 1 ? 's' : ''}`
+
+  return (
+    <div style={{
+      borderRadius: 10,
+      overflow: 'hidden',
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      transition: 'opacity 200ms ease',
+    }}
+      onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85' }}
+      onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+    >
+      <img
+        src={listing.image}
+        alt={listing.title}
+        style={{ width: '100%', height: 128, objectFit: 'cover', display: 'block' }}
+      />
+      <div style={{ padding: '10px 12px 12px' }}>
+        <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 4 }}>
+          {price}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <MapPin size={10} /> {listing.city}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Bed size={10} /> {beds}
+          </span>
+        </div>
+        {listing.tag && (
+          <span style={{
+            display: 'inline-block',
+            marginTop: 6,
+            padding: '2px 8px',
+            borderRadius: 999,
+            fontSize: 11,
+            background: 'rgba(99,134,241,0.12)',
+            color: 'var(--accent)',
+          }}>
+            {listing.tag}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ListingsPanel({ listings, loading }) {
+  return (
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      background: 'var(--background)',
+    }}>
+      {/* Panel header */}
+      <div style={{
+        flexShrink: 0,
+        padding: '0 20px',
+        height: 56,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+            {listings.length} properties
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            · updating as we chat
+          </span>
+        </div>
+        {loading && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
+            <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 500 }}>Refining</span>
+          </div>
+        )}
+      </div>
+
+      {/* Listings grid */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '16px 20px 24px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+        gap: 12,
+        alignContent: 'start',
+      }}>
+        {listings.map((l) => (
+          <ListingTile key={l.id} listing={l} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -185,18 +340,51 @@ export function ScreeningChat({ initialContext = null }) {
   const [loading, setLoading] = useState(false)
   const [screeningState, setScreeningState] = useState('idle')
   const [profile, setProfile] = useState(null)
+  const [searchParams, setSearchParams] = useState(() => contextToSearchParams(initialContext))
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
 
-  // Build the opener once — either a rich handoff or the plain starter
   const opener = buildOpener(initialContext)
+
+  const listings = useMemo(
+    () => searchListings({ ...searchParams, limit: 40 }),
+    [searchParams],
+  )
+
+  function mergeParams(partial) {
+    const fromPartial = partialToSearchParams(partial)
+    // Merge: partial_profile fields take precedence, but we keep form-derived fields
+    // that are not yet known to the agent (i.e. still null in partial)
+    setSearchParams((prev) => {
+      const next = { ...prev }
+      for (const [k, v] of Object.entries(fromPartial)) {
+        if (v != null) next[k] = v
+      }
+      return next
+    })
+  }
 
   // Auto-start: agent speaks first
   useEffect(() => {
+    // Persist the form data immediately so it's not lost if they leave before completing
+    if (initialContext) {
+      const preliminary = {
+        city: initialContext.city,
+        neighbourhoods: initialContext.neighbourhoods,
+        move_in_timeline: initialContext.timeline,
+        budget: initialContext.budget,
+        flat_type: initialContext.flatType,
+        bedrooms: initialContext.bedrooms,
+        occupants: initialContext.occupants,
+      }
+      localStorage.setItem('estato_user_profile', JSON.stringify(preliminary))
+    }
+
     async function init() {
       setLoading(true)
       try {
         const data = await callScreeningAPI([], opener)
+        if (data.partial) mergeParams(data.partial)
         setMessages([{
           id: crypto.randomUUID(),
           role: 'assistant',
@@ -211,7 +399,6 @@ export function ScreeningChat({ initialContext = null }) {
       }
     }
     init()
-  // opener is derived from initialContext which is stable after mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -245,11 +432,21 @@ export function ScreeningChat({ initialContext = null }) {
       setMessages((prev) => [...prev, agentMsg])
 
       if (data.type === 'complete') {
+        // Use full profile for final filter
+        setSearchParams(completeProfileToSearchParams(data.profile))
         localStorage.setItem('estato_user_profile', JSON.stringify(data.profile))
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) await db.savePreferences(user.id, data.profile)
+        } catch (err) {
+          console.warn('Could not save preferences to Supabase:', err)
+        }
         setTimeout(() => {
           setProfile(data.profile)
           setScreeningState('complete')
         }, 1500)
+      } else if (data.partial) {
+        mergeParams(data.partial)
       }
     } catch (err) {
       console.error('Screening API error:', err)
@@ -292,86 +489,99 @@ export function ScreeningChat({ initialContext = null }) {
       `}</style>
 
       <div style={{
-        height: '100dvh', display: 'flex', flexDirection: 'column',
+        display: 'flex',
+        height: '100dvh',
         background: 'var(--background)',
         fontFamily: 'Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif',
       }}>
-        {/* Header */}
-        <header style={{
-          flexShrink: 0, height: 56, padding: '0 24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
+        {/* ── LEFT: Chat panel ── */}
+        <div style={{
+          width: 420,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
         }}>
-          <span style={{ letterSpacing: '0.15em', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-            ✦ ESTATO
-          </span>
-          <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Agent Screening</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)' }} />
-            <span style={{ fontSize: 12, color: 'var(--success)', fontWeight: 500 }}>Live</span>
-          </div>
-        </header>
-
-        {/* Message thread */}
-        <main style={{
-          flex: 1, overflowY: 'auto', padding: '24px 24px 16px',
-          display: 'flex', flexDirection: 'column', gap: 16,
-        }}>
-          {messages.map((msg) =>
-            msg.role === 'assistant'
-              ? <AgentBubble key={msg.id} message={msg} />
-              : <UserBubble key={msg.id} message={msg} />
-          )}
-          {loading && <TypingIndicator />}
-          {screeningState === 'complete' && profile && (
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 32 }}>
-              <CompletionCard profile={profile} onContinue={() => navigate('/dashboard')} />
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </main>
-
-        {/* Input bar */}
-        {screeningState !== 'complete' && (
-          <footer style={{
-            flexShrink: 0, padding: '16px 24px',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            background: 'var(--surface)',
-            display: 'flex', alignItems: 'center', gap: 12,
+          {/* Header */}
+          <header style={{
+            flexShrink: 0, height: 56, padding: '0 24px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
           }}>
-            <input
-              ref={inputRef}
-              className="screening-input"
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your answer..."
-              disabled={loading}
-              style={{
-                flex: 1, background: 'transparent', border: 'none',
-                fontSize: 15, lineHeight: 1.5,
-                color: 'var(--text-primary)', caretColor: 'var(--accent)',
-              }}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!input.trim() || loading}
-              aria-label="Send"
-              style={{
-                width: 40, height: 40, borderRadius: '50%',
-                background: 'var(--accent)', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-                cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
-                opacity: !input.trim() || loading ? 0.38 : 1,
-                transition: 'opacity 200ms ease',
-              }}
-            >
-              <ArrowUp size={18} color="#fff" />
-            </button>
-          </footer>
-        )}
+            <span style={{ letterSpacing: '0.15em', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+              ✦ ESTATO
+            </span>
+            <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Agent Screening</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)' }} />
+              <span style={{ fontSize: 12, color: 'var(--success)', fontWeight: 500 }}>Live</span>
+            </div>
+          </header>
+
+          {/* Message thread */}
+          <main style={{
+            flex: 1, overflowY: 'auto', padding: '24px 24px 16px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            {messages.map((msg) =>
+              msg.role === 'assistant'
+                ? <AgentBubble key={msg.id} message={msg} />
+                : <UserBubble key={msg.id} message={msg} />
+            )}
+            {loading && <TypingIndicator />}
+            {screeningState === 'complete' && profile && (
+              <div style={{ paddingTop: 8, paddingBottom: 32 }}>
+                <CompletionCard profile={profile} onContinue={() => navigate('/dashboard')} />
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </main>
+
+          {/* Input bar */}
+          {screeningState !== 'complete' && (
+            <footer style={{
+              flexShrink: 0, padding: '16px 24px',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              background: 'var(--surface)',
+              display: 'flex', alignItems: 'center', gap: 12,
+            }}>
+              <input
+                ref={inputRef}
+                className="screening-input"
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your answer..."
+                disabled={loading}
+                style={{
+                  flex: 1, background: 'transparent', border: 'none',
+                  fontSize: 15, lineHeight: 1.5,
+                  color: 'var(--text-primary)', caretColor: 'var(--accent)',
+                }}
+              />
+              <button
+                onClick={handleSubmit}
+                disabled={!input.trim() || loading}
+                aria-label="Send"
+                style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: 'var(--accent)', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
+                  opacity: !input.trim() || loading ? 0.38 : 1,
+                  transition: 'opacity 200ms ease',
+                }}
+              >
+                <ArrowUp size={18} color="#fff" />
+              </button>
+            </footer>
+          )}
+        </div>
+
+        {/* ── RIGHT: Listings panel ── */}
+        <ListingsPanel listings={listings} loading={loading} />
       </div>
     </>
   )
