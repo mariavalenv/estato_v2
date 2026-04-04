@@ -4,11 +4,35 @@ import { ArrowUp, Check } from 'lucide-react'
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 
-const SILENT_START = { role: 'user', content: 'Start screening' }
+function buildOpener(ctx) {
+  if (!ctx) return 'Start screening'
 
-async function callScreeningAPI(displayMessages) {
+  const lines = [
+    'The user completed a quick intake form before this conversation. Here is what was already collected:',
+  ]
+  if (ctx.city) lines.push(`City: ${ctx.city}`)
+  if (ctx.neighbourhoods?.length) lines.push(`Preferred neighbourhoods: ${ctx.neighbourhoods.join(', ')}`)
+  if (ctx.timeline) lines.push(`Move-in timeline: ${ctx.timeline}`)
+  if (ctx.budget?.min || ctx.budget?.max) {
+    const min = ctx.budget.min ? `€${ctx.budget.min}` : null
+    const max = ctx.budget.max ? `€${ctx.budget.max}` : null
+    const str = min && max ? `${min} – ${max}/month` : max ? `Up to ${max}/month` : `From ${min}/month`
+    lines.push(`Budget: ${str}`)
+  }
+  if (ctx.flatType) lines.push(`Type of place: ${ctx.flatType}`)
+  if (ctx.bedrooms === 0) lines.push('Bedrooms: Studio (open to studio)')
+  else if (ctx.bedrooms) lines.push(`Bedrooms: ${ctx.bedrooms}`)
+  if (ctx.occupants) lines.push(`Who is moving in: ${ctx.occupants}`)
+  lines.push(
+    '',
+    'Please greet them warmly, briefly acknowledge what they shared, then continue by asking only the remaining unanswered questions. Skip any topics already covered above.',
+  )
+  return lines.join('\n')
+}
+
+async function callScreeningAPI(displayMessages, opener) {
   const apiMessages = [
-    SILENT_START,
+    { role: 'user', content: opener },
     ...displayMessages.map(({ role, content }) => ({ role, content })),
   ]
   const res = await fetch('/api/screening', {
@@ -37,33 +61,16 @@ function formatBudget(budget) {
 function TypingIndicator() {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, maxWidth: '75%' }}>
-      <div
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: '50%',
-          background: 'var(--accent)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 10,
-          fontWeight: 700,
-          color: '#fff',
-          flexShrink: 0,
-        }}
-      >
-        ✦
-      </div>
-      <div
-        style={{
-          padding: '10px 14px',
-          background: 'var(--surface)',
-          borderRadius: '18px 18px 18px 4px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-        }}
-      >
+      <div style={{
+        width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0,
+      }}>✦</div>
+      <div style={{
+        padding: '10px 14px', background: 'var(--surface)',
+        borderRadius: '18px 18px 18px 4px',
+        display: 'flex', alignItems: 'center', gap: 4,
+      }}>
         <span className="typing-dot" />
         <span className="typing-dot" style={{ animationDelay: '150ms' }} />
         <span className="typing-dot" style={{ animationDelay: '300ms' }} />
@@ -75,36 +82,17 @@ function TypingIndicator() {
 function AgentBubble({ message }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, maxWidth: '75%' }}>
-      {/* Avatar */}
-      <div
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: '50%',
-          background: 'var(--accent)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 10,
-          fontWeight: 700,
-          color: '#fff',
-          flexShrink: 0,
-        }}
-      >
-        ✦
-      </div>
+      <div style={{
+        width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0,
+      }}>✦</div>
       <div>
-        <div
-          style={{
-            padding: '12px 16px',
-            background: 'var(--surface)',
-            borderRadius: '18px 18px 18px 4px',
-            fontSize: 15,
-            lineHeight: 1.5,
-            color: 'var(--text-primary)',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
+        <div style={{
+          padding: '12px 16px', background: 'var(--surface)',
+          borderRadius: '18px 18px 18px 4px',
+          fontSize: 15, lineHeight: 1.5, color: 'var(--text-primary)', whiteSpace: 'pre-wrap',
+        }}>
           {message.content}
         </div>
         <p style={{ marginTop: 4, marginLeft: 4, fontSize: 11, color: 'var(--text-secondary)' }}>
@@ -118,17 +106,11 @@ function AgentBubble({ message }) {
 function UserBubble({ message }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginLeft: 'auto', maxWidth: '75%' }}>
-      <div
-        style={{
-          padding: '12px 16px',
-          background: 'var(--accent)',
-          borderRadius: '18px 18px 4px 18px',
-          fontSize: 15,
-          lineHeight: 1.5,
-          color: '#fff',
-          whiteSpace: 'pre-wrap',
-        }}
-      >
+      <div style={{
+        padding: '12px 16px', background: 'var(--accent)',
+        borderRadius: '18px 18px 4px 18px',
+        fontSize: 15, lineHeight: 1.5, color: '#fff', whiteSpace: 'pre-wrap',
+      }}>
         {message.content}
       </div>
       <p style={{ marginTop: 4, marginRight: 4, fontSize: 11, color: 'var(--text-secondary)' }}>
@@ -147,31 +129,15 @@ function CompletionCard({ profile, onContinue }) {
   ]
 
   return (
-    <div
-      className="completion-fade-in"
-      style={{
-        background: 'var(--surface)',
-        borderRadius: 12,
-        padding: 24,
-        boxShadow: '0 4px 16px 0 rgba(0,0,0,0.16)',
-        maxWidth: 400,
-        width: '100%',
-      }}
-    >
-      {/* Header */}
+    <div className="completion-fade-in" style={{
+      background: 'var(--surface)', borderRadius: 12, padding: 24,
+      boxShadow: '0 4px 16px 0 rgba(0,0,0,0.16)', maxWidth: 400, width: '100%',
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: 'rgba(52,211,105,0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%', background: 'rgba(52,211,105,0.12)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
           <Check size={20} color="var(--success)" />
         </div>
         <div>
@@ -184,7 +150,6 @@ function CompletionCard({ profile, onContinue }) {
         </div>
       </div>
 
-      {/* Summary fields */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
         {fields.map(({ label, value }) => (
           <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
@@ -194,20 +159,13 @@ function CompletionCard({ profile, onContinue }) {
         ))}
       </div>
 
-      {/* CTA */}
       <button
         onClick={onContinue}
         style={{
-          width: '100%',
-          padding: '12px 0',
-          borderRadius: 8,
-          background: 'var(--accent)',
-          border: 'none',
-          fontSize: 15,
-          fontWeight: 600,
-          color: '#fff',
-          cursor: 'pointer',
-          transition: 'opacity 200ms ease',
+          width: '100%', padding: '12px 0', borderRadius: 8,
+          background: 'var(--accent)', border: 'none',
+          fontSize: 15, fontWeight: 600, color: '#fff',
+          cursor: 'pointer', transition: 'opacity 200ms ease',
         }}
         onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
         onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
@@ -220,30 +178,31 @@ function CompletionCard({ profile, onContinue }) {
 
 /* ── Main component ──────────────────────────────────────────── */
 
-export function ScreeningChat() {
+export function ScreeningChat({ initialContext = null }) {
   const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [screeningState, setScreeningState] = useState('idle') // 'idle' | 'active' | 'complete'
+  const [screeningState, setScreeningState] = useState('idle')
   const [profile, setProfile] = useState(null)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
 
-  // Auto-start: send silent opener, display agent's first question
+  // Build the opener once — either a rich handoff or the plain starter
+  const opener = buildOpener(initialContext)
+
+  // Auto-start: agent speaks first
   useEffect(() => {
     async function init() {
       setLoading(true)
       try {
-        const data = await callScreeningAPI([])
-        setMessages([
-          {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: data.message,
-            timestamp: new Date(),
-          },
-        ])
+        const data = await callScreeningAPI([], opener)
+        setMessages([{
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date(),
+        }])
         setScreeningState('active')
       } catch (err) {
         console.error('Failed to start screening:', err)
@@ -252,9 +211,10 @@ export function ScreeningChat() {
       }
     }
     init()
+  // opener is derived from initialContext which is stable after mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Scroll to bottom whenever messages or loading state changes
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, screeningState])
@@ -269,22 +229,19 @@ export function ScreeningChat() {
       content: trimmed,
       timestamp: new Date(),
     }
-
     const updatedMessages = [...messages, userMsg]
     setMessages(updatedMessages)
     setInput('')
     setLoading(true)
 
     try {
-      const data = await callScreeningAPI(updatedMessages)
-
+      const data = await callScreeningAPI(updatedMessages, opener)
       const agentMsg = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: data.message,
         timestamp: new Date(),
       }
-
       setMessages((prev) => [...prev, agentMsg])
 
       if (data.type === 'complete') {
@@ -310,7 +267,6 @@ export function ScreeningChat() {
 
   return (
     <>
-      {/* Component-scoped animations */}
       <style>{`
         @keyframes screening-live-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -324,123 +280,65 @@ export function ScreeningChat() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .live-dot {
-          animation: screening-live-pulse 1.6s ease-in-out infinite;
-        }
+        .live-dot { animation: screening-live-pulse 1.6s ease-in-out infinite; }
         .typing-dot {
-          display: inline-block;
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
+          display: inline-block; width: 6px; height: 6px; border-radius: 50%;
           background: var(--text-secondary);
           animation: screening-typing-bounce 1.2s ease-in-out infinite;
         }
-        .completion-fade-in {
-          animation: screening-fade-up 0.4s ease forwards;
-        }
-        .screening-input::placeholder {
-          color: var(--text-secondary);
-        }
-        .screening-input:focus {
-          outline: none;
-        }
+        .completion-fade-in { animation: screening-fade-up 0.4s ease forwards; }
+        .screening-input::placeholder { color: var(--text-secondary); }
+        .screening-input:focus { outline: none; }
       `}</style>
 
-      <div
-        style={{
-          height: '100dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'var(--background)',
-          fontFamily: 'Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif',
-        }}
-      >
-        {/* ── Header ─────────────────────────────────────────── */}
-        <header
-          style={{
-            flexShrink: 0,
-            height: 56,
-            padding: '0 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
-          }}
-        >
-          {/* Logo */}
-          <span
-            style={{
-              letterSpacing: '0.15em',
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              textTransform: 'uppercase',
-            }}
-          >
+      <div style={{
+        height: '100dvh', display: 'flex', flexDirection: 'column',
+        background: 'var(--background)',
+        fontFamily: 'Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif',
+      }}>
+        {/* Header */}
+        <header style={{
+          flexShrink: 0, height: 56, padding: '0 24px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
+        }}>
+          <span style={{ letterSpacing: '0.15em', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
             ✦ ESTATO
           </span>
-
-          {/* Label */}
-          <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
-            Agent Screening
-          </span>
-
-          {/* Live indicator */}
+          <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Agent Screening</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div
-              className="live-dot"
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: 'var(--success)',
-              }}
-            />
+            <div className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)' }} />
             <span style={{ fontSize: 12, color: 'var(--success)', fontWeight: 500 }}>Live</span>
           </div>
         </header>
 
-        {/* ── Message thread ──────────────────────────────────── */}
-        <main
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '24px 24px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}
-        >
+        {/* Message thread */}
+        <main style={{
+          flex: 1, overflowY: 'auto', padding: '24px 24px 16px',
+          display: 'flex', flexDirection: 'column', gap: 16,
+        }}>
           {messages.map((msg) =>
             msg.role === 'assistant'
               ? <AgentBubble key={msg.id} message={msg} />
               : <UserBubble key={msg.id} message={msg} />
           )}
-
           {loading && <TypingIndicator />}
-
           {screeningState === 'complete' && profile && (
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 32 }}>
               <CompletionCard profile={profile} onContinue={() => navigate('/dashboard')} />
             </div>
           )}
-
           <div ref={bottomRef} />
         </main>
 
-        {/* ── Input bar ───────────────────────────────────────── */}
+        {/* Input bar */}
         {screeningState !== 'complete' && (
-          <footer
-            style={{
-              flexShrink: 0,
-              padding: '16px 24px',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              background: 'var(--surface)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
+          <footer style={{
+            flexShrink: 0, padding: '16px 24px',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'var(--surface)',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
             <input
               ref={inputRef}
               className="screening-input"
@@ -451,33 +349,24 @@ export function ScreeningChat() {
               placeholder="Type your answer..."
               disabled={loading}
               style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                fontSize: 15,
-                lineHeight: 1.5,
-                color: 'var(--text-primary)',
-                caretColor: 'var(--accent)',
+                flex: 1, background: 'transparent', border: 'none',
+                fontSize: 15, lineHeight: 1.5,
+                color: 'var(--text-primary)', caretColor: 'var(--accent)',
               }}
             />
             <button
               onClick={handleSubmit}
               disabled={!input.trim() || loading}
+              aria-label="Send"
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                background: 'var(--accent)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                width: 40, height: 40, borderRadius: '50%',
+                background: 'var(--accent)', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
                 cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
                 opacity: !input.trim() || loading ? 0.38 : 1,
                 transition: 'opacity 200ms ease',
               }}
-              aria-label="Send"
             >
               <ArrowUp size={18} color="#fff" />
             </button>

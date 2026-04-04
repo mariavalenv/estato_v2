@@ -1,5 +1,5 @@
-import { ScreeningChat } from '../components/ScreeningChat'
+import { ScreeningFlow } from '../components/ScreeningFlow'
 
 export function Onboarding() {
-  return <ScreeningChat />
+  return <ScreeningFlow />
 }
