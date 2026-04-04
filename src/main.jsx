@@ -5,6 +5,7 @@ import './index.css'
 
 import { DensityProvider } from './contexts/DensityContext'
 import { AppLayout } from './components/layout/AppLayout'
+import { Landing } from './pages/Landing'
 import { Onboarding } from './pages/Onboarding'
 import { Dashboard } from './pages/Dashboard'
 import { Approve } from './pages/Approve'
@@ -32,9 +33,9 @@ function AppRoutes() {
         }
       />
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/onboarding" replace />} />
-      <Route path="*" element={<Navigate to="/onboarding" replace />} />
+      {/* Landing / root */}
+      <Route path="/" element={<Landing />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
