@@ -1,25 +1,27 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo } from 'react'
 
 const DensityContext = createContext(null)
 
 export function DensityProvider({ children }) {
   const [density, setDensityState] = useState(() => {
     try {
-      return localStorage.getItem('flatmate-density') || 'standard'
+      return localStorage.getItem('estato_density') || 'standard'
     } catch {
       return 'standard'
     }
   })
 
-  function setDensity(value) {
+  const setDensity = useCallback((value) => {
     setDensityState(value)
     try {
-      localStorage.setItem('flatmate-density', value)
+      localStorage.setItem('estato_density', value)
     } catch {}
-  }
+  }, [])
+
+  const value = useMemo(() => ({ density, setDensity }), [density, setDensity])
 
   return (
-    <DensityContext.Provider value={{ density, setDensity }}>
+    <DensityContext.Provider value={value}>
       {children}
     </DensityContext.Provider>
   )

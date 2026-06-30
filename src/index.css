@@ -4,23 +4,43 @@
 
 /* ── Design tokens ─────────────────────────────────────────── */
 :root {
-  --background: #FAFAFA;
-  --surface: #FFFFFF;
-  --text-primary: #0A0A0A;
-  --text-secondary: #6B6B6B;
-  --accent: #6386F1;
+  --background: #F4EFE0;
+  --surface: #FDFCF8;
+  --surface-raised: #EFECE4;
+  --text-primary: #1A1410;
+  --text-secondary: #8A8070;
+  --accent: #6366F1;
+  --accent-muted: rgba(99,102,241,0.12);
   --success: #10B981;
+  --success-muted: rgba(16,185,129,0.10);
   --warning: #F59E0B;
+  --warning-muted: rgba(245,158,11,0.10);
+  --danger: #EF4444;
+  --danger-muted: rgba(239,68,68,0.10);
+  --amber: #F59E0B;
+  --amber-muted: rgba(245,158,11,0.10);
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.14);
 }
 
 [data-theme="dark"] {
-  --background: #080B0C;
-  --surface: #121214;
-  --text-primary: #F5F5F7;
-  --text-secondary: #9A9AA0;
-  --accent: #8B5CF6;
+  --background: #0A0A0C;
+  --surface: #131316;
+  --surface-raised: #1C1C21;
+  --text-primary: #F0F0F3;
+  --text-secondary: #8A8A96;
+  --accent: #6366F1;
+  --accent-muted: rgba(99,102,241,0.12);
   --success: #34D369;
+  --success-muted: rgba(52,211,105,0.10);
   --warning: #FBF624;
+  --warning-muted: rgba(251,246,36,0.10);
+  --danger: #F87171;
+  --danger-muted: rgba(248,113,113,0.10);
+  --amber: #F59E0B;
+  --amber-muted: rgba(245,158,11,0.10);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.13);
 }
 
 /* ── Base reset ────────────────────────────────────────────── */
@@ -33,6 +53,9 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Disable the browser's horizontal back/forward swipe-navigation gesture so
+     swiping a card left/right never navigates away from the app. */
+  overscroll-behavior-x: none;
 }
 
 body {
@@ -80,6 +103,49 @@ a {
   animation: orb-ring 2.5s ease-out infinite;
 }
 
+/* ── VoiceOrb ring + core animations ──────────────────────── */
+@keyframes orb-expand-ring {
+  from { transform: scale(1);    opacity: 0.55; }
+  to   { transform: scale(1.85); opacity: 0; }
+}
+
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.055); }
+}
+
+/* Ring classes — duration set via inline style; delay set per class */
+.orb-ring-base {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: orb-expand-ring var(--ring-dur, 2.6s) ease-out infinite;
+  animation-delay: var(--ring-delay, 0s);
+}
+
+/* Core breathing — duration varies by state */
+.orb-core { animation: orb-breathe var(--core-dur, 3s) ease-in-out infinite; }
+
+/* ── Concentric orb ring animations ───────────────────────── */
+@keyframes orb-middle-ring-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.2); }
+}
+
+@keyframes orb-outer-ring-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.3); }
+}
+
+.orb-middle-ring {
+  animation: orb-middle-ring-pulse 2s ease-in-out infinite;
+}
+
+.orb-outer-ring {
+  animation: orb-outer-ring-pulse 2s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
 /* ── Landing page ──────────────────────────────────────────── */
 @keyframes landing-orb {
   0%, 100% { opacity: 0.72; transform: scale(1); }
@@ -111,9 +177,79 @@ a {
 
 /* Ghost button */
 .l-ghost { transition: background 200ms ease, color 200ms ease; }
-.l-ghost:hover { background: rgba(255,255,255,0.08) !important; color: #fff !important; }
+.l-ghost:hover { background: rgba(0,0,0,0.07) !important; }
+
+/* ── Utility keyframes ─────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 
 /* ── Scrollbar (dark surfaces) ─────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 999px; }
+
+/* ── Dashboard feature rail ───────────────────────────────────
+   Always-visible horizontal scroll bar so the functionalities
+   rail reads as scrollable even on macOS (where bars auto-hide). */
+.feature-rail {
+  scrollbar-width: thin;                       /* Firefox */
+  scrollbar-color: currentColor transparent;
+}
+.feature-rail::-webkit-scrollbar { height: 10px; }
+.feature-rail::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 0 24px;
+}
+.feature-rail::-webkit-scrollbar-thumb {
+  background: currentColor;
+  opacity: 0.4;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* ── Aurora blob morph ────────────────────────────────────────── */
+@keyframes blobIdle {
+  0%   { border-radius: 56% 44% 52% 48% / 52% 48% 56% 44% }
+  25%  { border-radius: 50% 50% 46% 54% / 48% 52% 50% 50% }
+  50%  { border-radius: 46% 54% 56% 44% / 54% 46% 48% 52% }
+  75%  { border-radius: 52% 48% 50% 50% / 46% 54% 54% 46% }
+  100% { border-radius: 56% 44% 52% 48% / 52% 48% 56% 44% }
+}
+
+/* ── Typing indicator dots ────────────────────────────────────── */
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+.typing-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(28,24,20,0.26);
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 150ms; }
+.typing-dot:nth-child(3) { animation-delay: 300ms; }
+
+/* ── Spinner ──────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes chatPopUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fabFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}

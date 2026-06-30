@@ -1,267 +1,411 @@
-import { Clock, CheckCircle2, ChevronRight, Search } from 'lucide-react'
-import { useDensity } from '../contexts/DensityContext'
-import { DensityToggle } from '../components/ui/DensityToggle'
-import { MatchCard } from '../components/ui/MatchCard'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { supabase } from '../supabase.js'
 
-/* ── Sample data ─────────────────────────────────────────────── */
-const LISTING_CARD = {
-  type: 'listing',
-  image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80',
-  images: [
-    'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80',
-    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80',
-  ],
-  matchPct: 94,
-  price: '€1,150 / mo',
-  neighbourhood: 'Malasaña',
-  beds: '2 beds',
-  commute: '18 min',
-  address: 'Calle del Pez 14, 2°A',
-  sqm: 68,
-  reasons: [
-    'Within your €900–€1,200 budget',
-    'Great fit for hybrid work schedule',
-    'Near Callao metro',
-  ],
-  tradeoffs: ['Top floor, no lift', 'Shared courtyard can be noisy on weekends'],
-  agentReasoning:
-    "I'm confident this is a strong fit based on your budget and commute preferences. The neighbourhood matches your social lifestyle well.",
+/* ── Themes ──────────────────────────────────────────────────────
+   Same two palettes as the landing page. Clicking the dog logo
+   cycles between them and persists to the shared localStorage key,
+   so the dashboard and landing stay in sync.
+   ──────────────────────────────────────────────────────────── */
+
+const THEMES = {
+  light: { id: 'light', bg: '#FFFFFF', ink: '#000000', logoBg: '#C94A3D' },
+  terracotta: { id: 'terracotta', bg: '#C94A3D', ink: '#111111', logoBg: '#FFFFFF' },
+}
+const THEME_ORDER = ['light', 'terracotta']
+
+/* ── Functionalities ────────────────────────────────────────────
+   The horizontal rail of things you can do. Each card links to an
+   existing route. Scroll the rail left/right to browse them all.
+   ──────────────────────────────────────────────────────────── */
+
+const FEATURES = [
+  { id: 'flat', label: 'Flat hunting', sub: 'Find your next place', to: '/screening', img: '/char-house.png' },
+  { id: 'housemate', label: 'Housemate hunting', sub: 'Meet your matches', to: '/housemates', img: '/char-man.png' },
+  { id: 'agent', label: 'AI agent', sub: 'Let Estato do the work', to: '/agent', img: '/char-dog.png' },
+  { id: 'profile', label: 'Profile set up', sub: 'Tell us about you', to: '/account', img: '/char-woman.png' },
+  { id: 'activity', label: 'Activity log', sub: 'See what happened', to: '/activity', img: '/char-box.png' },
+]
+
+// Shared style for the carousel's left/right paging arrows.
+function arrowStyle(THEME) {
+  return {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    zIndex: 2,
+    width: 48,
+    height: 48,
+    borderRadius: '50%',
+    border: `2px solid ${THEME.ink}`,
+    background: THEME.bg,
+    color: THEME.ink,
+    fontSize: 28,
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 4,
+    transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease, opacity 0.2s ease',
+  }
 }
 
-const FLATMATE_CARD = {
-  type: 'flatmate',
-  image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
-  images: [
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
-  ],
-  matchPct: 91,
-  name: 'Lucía M.',
-  age: '27',
-  jobTitle: 'UX Designer',
-  tags: ['Early riser', 'Clean & tidy', 'Professional'],
-  reasons: [
-    'Shares your hybrid work schedule',
-    'Rated highly for cleanliness',
-    'Looking in the same neighbourhoods',
-  ],
-  tradeoffs: ['Has a cat', 'Prefers quiet evenings'],
-  agentReasoning:
-    "Lucía's routine and cleanliness rating align closely with your preferences. I'd recommend reaching out soon — she's had 3 other interest signals this week.",
-}
+/* ── Dashboard ──────────────────────────────────────────────────
+   Rebuilt from scratch. We start from the foundation: the same
+   background and dog logo as the landing page, inside the shared
+   AppLayout sidebar shell. Everything else is a clean canvas,
+   ready to build up from here.
+   ──────────────────────────────────────────────────────────── */
 
-/* ── Agent Status Card ───────────────────────────────────────── */
-function AgentStatusCard() {
+export function Dashboard() {
+  const navigate = useNavigate()
+  const [userName, setUserName] = useState(null)
+  const [themeId, setThemeId] = useState(() => {
+    try { return localStorage.getItem('estato:landingTheme') || 'light' } catch { return 'light' }
+  })
+  const THEME = THEMES[themeId] || THEMES.light
+
+  // Infinite carousel — one card in view at a time. We render a clone
+  // of the last card before the first and a clone of the first after
+  // the last (SLIDES below). When the user scrolls onto a clone we
+  // silently jump to the matching real card, so scrolling right past
+  // the last card loops seamlessly back to the first.
+  const N = FEATURES.length
+  const railRef = useRef(null)
+  const settleTimer = useRef(null)
+  const [activeIdx, setActiveIdx] = useState(0)
+
+  // Start the rail on the first *real* card (slide index 1, since
+  // slide 0 is the leading clone).
+  useEffect(() => {
+    const rail = railRef.current
+    if (rail) rail.scrollLeft = rail.clientWidth
+  }, [])
+
+  // Page by one card; the wrap is handled by onRailScroll once it lands.
+  function go(dir) {
+    const rail = railRef.current
+    if (rail) rail.scrollBy({ left: dir * rail.clientWidth, behavior: 'smooth' })
+  }
+
+  // Jump straight to a real card (used by the dots).
+  function goToReal(i) {
+    const rail = railRef.current
+    if (rail) rail.scrollTo({ left: (i + 1) * rail.clientWidth, behavior: 'smooth' })
+  }
+
+  // After scrolling settles, sync the active dot and, if we landed on a
+  // clone, reposition (instantly, no animation) to the real card.
+  function onRailScroll() {
+    const rail = railRef.current
+    if (!rail) return
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+    settleTimer.current = setTimeout(() => {
+      const slide = Math.round(rail.scrollLeft / rail.clientWidth)
+      if (slide === 0) {
+        rail.scrollLeft = N * rail.clientWidth         // leading clone → last real
+        setActiveIdx(N - 1)
+      } else if (slide === N + 1) {
+        rail.scrollLeft = rail.clientWidth             // trailing clone → first real
+        setActiveIdx(0)
+      } else {
+        setActiveIdx(slide - 1)
+      }
+    }, 120)
+  }
+
+  // Fade the greeting out as the page scrolls down.
+  const { scrollY } = useScroll()
+  const greetingOpacity = useTransform(scrollY, [0, 100000], [1, 0])
+  const greetingY = useTransform(scrollY, [0, 100000], [0, -4000])
+
+  function cycleTheme() {
+    const idx = THEME_ORDER.indexOf(themeId)
+    const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length]
+    setThemeId(next)
+    try { localStorage.setItem('estato:landingTheme', next) } catch { }
+  }
+
+  // Auth guard — bounce to the landing page if signed out.
+  useEffect(() => {
+    let cancelled = false
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (cancelled) return
+      if (!user) { navigate('/'); return }
+      const firstName =
+        user.user_metadata?.full_name?.split(' ')[0] ??
+        user.email?.split('@')[0] ??
+        'there'
+      setUserName(firstName)
+    })
+    return () => { cancelled = true }
+  }, [navigate])
+
   return (
     <div
-      className="w-full rounded-card p-6 shadow-card relative overflow-hidden"
-      style={{ background: 'var(--surface)' }}
+      style={{
+        position: 'relative',
+        background: THEME.bg,
+        fontFamily: 'Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif',
+        boxSizing: 'border-box',
+        transition: 'background 0.5s ease',
+      }}
     >
-      {/* Radial glow behind orb */}
+      {/* Logo — fixed top-left corner so it stays put while scrolling.
+          Click the dog to cycle the colours, same as the landing /
+          log-in page. */}
       <div
         style={{
-          position: 'absolute',
-          top: 24,
+          position: 'fixed',
+          top: 20,
           left: 24,
-          width: 120,
-          height: 120,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(99,134,241,0.20) 0%, transparent 70%)',
-          pointerEvents: 'none',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
         }}
-      />
-
-      <div className="flex items-start justify-between gap-4">
-        {/* Left: orb + status */}
-        <div className="flex items-center gap-4">
-          {/* Pulsing orb — pure CSS */}
-          <div className="relative w-10 h-10 shrink-0 flex items-center justify-center">
-            <div
-              className="absolute w-10 h-10 rounded-full orb-ring"
-              style={{ background: 'rgba(99,134,241,0.25)' }}
-            />
-            <div
-              className="w-5 h-5 rounded-full orb-pulse"
-              style={{ background: 'var(--accent)' }}
-            />
-          </div>
-
-          <div>
-            <p className="text-meta font-medium mb-0.5" style={{ color: 'var(--text-secondary)' }}>
-              Agent Status
-            </p>
-            <p className="text-heading font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Reviewing 14 options
-            </p>
-            <div className="mt-2 flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-body">
-                <CheckCircle2 size={13} style={{ color: 'var(--success)' }} />
-                <span style={{ color: 'var(--text-secondary)' }}>2 strong matches identified</span>
-              </div>
-              <div className="flex items-center gap-2 text-body">
-                <CheckCircle2 size={13} style={{ color: 'var(--success)' }} />
-                <span style={{ color: 'var(--text-secondary)' }}>Confidence: High</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: next update */}
-        <p className="text-meta shrink-0 mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Next update ~2 hours
-        </p>
+      >
+        <button
+          type="button"
+          onClick={cycleTheme}
+          aria-label="Change background colour"
+          title="Click to change background"
+          style={{
+            fontFamily: 'Archivo Black, Inter, sans-serif',
+            fontSize: 14, letterSpacing: '0.22em',
+            color: THEME.ink,
+            transition: 'color 0.4s ease',
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+          }}
+        >
+          ESTATO
+        </button>
       </div>
-    </div>
-  )
-}
 
-/* ── Recent Activity Card ────────────────────────────────────── */
-function RecentActivityCard() {
-  const items = [
-    'Contacted 3 listings',
-    'Evaluated 21 flatmate profiles',
-    'Discarded 5 options',
-  ]
-  return (
-    <div
-      className="rounded-card p-5 shadow-card flex-1 min-w-0"
-      style={{ background: 'var(--surface)' }}
-    >
-      <p className="text-heading font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-        Recent Activity
-      </p>
-      <div className="flex flex-col gap-3">
-        {items.map((item) => (
-          <div key={item} className="flex items-center gap-3 text-body" style={{ color: 'var(--text-secondary)' }}>
-            <Clock size={14} className="shrink-0" style={{ color: 'var(--text-secondary)' }} />
-            {item}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+      {/* Hero — fills the viewport and centres the greeting. The whole
+          block fades + lifts away as you scroll down. */}
+      <motion.section
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '48px 24px',
+          boxSizing: 'border-box',
+          opacity: greetingOpacity,
+          y: greetingY,
+        }}
+      >
+        {/* Greeting — the welcome moment on login. "Hello," fades in
+            first, then the user's name fades in just after it. */}
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.3, ease: 'easeOut' }}
+          style={{
+            fontFamily: 'Archivo Black, Inter, sans-serif',
+            fontSize: 'clamp(28px, 5vw, 44px)',
+            letterSpacing: '-0.02em',
+            color: THEME.ink,
+            margin: 0,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            transition: 'color 0.4s ease',
+          }}
+        >
+          Hello
+          <AnimatePresence>
+            {userName && (
+              <motion.span
+                key={userName}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.9, delay: 1.1, ease: 'easeOut' }}
+              >
+                , {userName}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.h1>
+      </motion.section>
 
-/* ── Needs Your Input Card ───────────────────────────────────── */
-function NeedsInputCard() {
-  const navigate = useNavigate()
-  const rows = [
-    {
-      label: 'Match #94 — Malasaña flat',
-      sub: 'Agent awaiting your approval',
-      action: 'Review',
-      onClick: () => navigate('/approve/1'),
-    },
-    {
-      label: 'Lucía M. wants to connect',
-      sub: 'Sent you a message 2h ago',
-      action: 'View',
-      onClick: () => navigate('/chat/1'),
-    },
-  ]
+      {/* Functionalities — a full-height panel you land on once the
+          welcome scrolls away. The rail of cards scrolls horizontally
+          (left/right) so you can browse every thing Estato can do. */}
+      <section
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '64px 0',
+          boxSizing: 'border-box',
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-120px' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <h2
+            style={{
+              fontFamily: 'Archivo Black, Inter, sans-serif',
+              fontSize: 'clamp(20px, 3vw, 28px)',
+              letterSpacing: '-0.01em',
+              color: THEME.ink,
+              margin: '0 0 24px',
+              padding: '0 24px',
+              textTransform: 'uppercase',
+              transition: 'color 0.4s ease',
+            }}
+          >
+            What do you want to do?
+          </h2>
 
-  return (
-    <div
-      className="rounded-card p-5 shadow-card flex-1 min-w-0"
-      style={{ background: 'var(--surface)' }}
-    >
-      <p className="text-heading font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-        Needs Your Input
-      </p>
-      <div className="flex flex-col gap-4">
-        {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-body font-medium" style={{ color: 'var(--text-primary)' }}>
-                {row.label}
-              </p>
-              <p className="text-meta" style={{ color: 'var(--text-secondary)' }}>
-                {row.sub}
-              </p>
-            </div>
+          {/* Carousel — one card at a time. The arrows and free scroll /
+              swipe both page horizontally, and it loops infinitely: clones
+              of the first and last cards sit at the ends so scrolling past
+              the last card wraps seamlessly back to the first. */}
+          <div style={{ position: 'relative', padding: '0 24px' }}>
+            {/* Left arrow */}
             <button
-              onClick={row.onClick}
-              className="px-3 py-1 rounded-chip text-meta font-medium transition-all duration-200 shrink-0 cursor-pointer"
+              type="button"
+              onClick={() => go(-1)}
+              aria-label="Previous"
+              style={{ ...arrowStyle(THEME), left: 32 }}
+            >
+              ‹
+            </button>
+
+            {/* Right arrow */}
+            <button
+              type="button"
+              onClick={() => go(1)}
+              aria-label="Next"
+              style={{ ...arrowStyle(THEME), right: 32 }}
+            >
+              ›
+            </button>
+
+            <div
+              ref={railRef}
+              onScroll={onRailScroll}
+              className="feature-rail"
               style={{
-                background: 'var(--accent)',
-                color: '#fff',
-                border: 'none',
+                display: 'flex',
+                overflowX: 'auto',
+                scrollSnapType: 'x mandatory',
+                paddingBottom: 16,
+                WebkitOverflowScrolling: 'touch',
+                color: THEME.ink,
               }}
             >
-              {row.action}
-            </button>
+              {[FEATURES[N - 1], ...FEATURES, FEATURES[0]].map((f, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: '0 0 100%',
+                    scrollSnapAlign: 'center',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    padding: '8px 0',
+                  }}
+                >
+                  <motion.button
+                    type="button"
+                    onClick={() => navigate(f.to)}
+                    whileHover={{ y: -6 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{
+                      width: 'min(420px, 80vw)',
+                      minHeight: 420,
+                      border: 'none',
+                      background: 'transparent',
+                      color: THEME.ink,
+                      padding: '36px 32px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      justifyContent: 'flex-start',
+                      gap: -1000,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'color 0.4s ease',
+                    }}
+                  >
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <span
+                        style={{
+                          fontFamily: 'Archivo Black, Inter, sans-serif',
+                          fontSize: 26,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        {f.label}
+                      </span>
+                      <span style={{ fontSize: 15, opacity: 0.7 }}>{f.sub}</span>
+                    </span>
+                    {f.img && (
+                      <span
+                        style={{
+                          alignSelf: 'center',
+                          height: 360,
+                          display: 'flex',
+                          alignItems: 'flex-end',
+                          justifyContent: 'center',
+                          // Nudge the house vertically: negative = UP, positive = down.
+                          transform: f.id === 'flat' ? 'translateY(-45px)' : 'none',
+                        }}
+                      >
+                        <img
+                          src={f.img}
+                          alt=""
+                          draggable={false}
+                          style={{
+                            width: 'auto',
+                            maxHeight: f.id === 'flat' ? 450 : 490,
+                            maxWidth: f.id === 'flat' ? '66%' : '80%',
+                            objectFit: 'contain',
+                            pointerEvents: 'none',
+                          }}
+                        />
+                      </span>
+                    )}
+                  </motion.button>
+                </div>
+              ))}
+            </div>
+
+            {/* Dots — show which card you're on; tap to jump. */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16 }}>
+              {FEATURES.map((f, i) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => goToReal(i)}
+                  aria-label={`Go to ${f.label}`}
+                  style={{
+                    width: i === activeIdx ? 24 : 10,
+                    height: 10,
+                    borderRadius: 999,
+                    border: 'none',
+                    background: THEME.ink,
+                    opacity: i === activeIdx ? 1 : 0.3,
+                    cursor: 'pointer',
+                    transition: 'width 0.3s ease, opacity 0.3s ease',
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ── Dashboard Page ──────────────────────────────────────────── */
-export function Dashboard() {
-  const { density } = useDensity()
-
-  return (
-    <div className="px-6 py-8 max-w-3xl mx-auto flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-display font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Good morning, Maria
-          </h1>
-          <p className="mt-1 text-body" style={{ color: 'var(--text-secondary)' }}>
-            Your agent is on it.
-          </p>
-        </div>
-        <DensityToggle />
-      </div>
-
-      {/* Start flat-hunting CTA */}
-      <button
-        onClick={() => navigate('/screening')}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-btn text-body font-semibold transition-all duration-200 hover:opacity-88 cursor-pointer"
-        style={{ background: 'var(--accent)', color: '#fff', border: 'none' }}
-      >
-        <Search size={16} />
-        Start flat-hunting
-      </button>
-
-      {/* Agent status — always visible */}
-      <AgentStatusCard />
-
-      {/* Two column: activity + input */}
-      {density !== 'minimal' && (
-        <div className="flex flex-col sm:flex-row gap-4">
-          <RecentActivityCard />
-          <NeedsInputCard />
-        </div>
-      )}
-
-      {density === 'minimal' && (
-        <NeedsInputCard />
-      )}
-
-      {/* Strong Matches */}
-      {density !== 'minimal' && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-heading font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Strong Matches
-            </p>
-            <button
-              className="flex items-center gap-1 text-body transition-opacity duration-200 hover:opacity-70 cursor-pointer"
-              style={{ background: 'none', border: 'none', color: 'var(--accent)', padding: 0 }}
-            >
-              View All <ChevronRight size={15} />
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <MatchCard card={LISTING_CARD} density={density === 'detailed' ? 'detailed' : 'standard'} />
-            <MatchCard card={FLATMATE_CARD} density={density === 'detailed' ? 'detailed' : 'standard'} />
-          </div>
-        </div>
-      )}
+        </motion.div>
+      </section>
     </div>
   )
 }

@@ -1,85 +1,48 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, MoreVertical, ArrowUp } from 'lucide-react'
+import { useChat } from '../hooks/useChat.js'
+import { getMatchById } from '../lib/dashboard/fetchers.js'
+import { supabase } from '../supabase.js'
 
-const MATCH = {
-  name: 'Lucía M.',
-  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80',
-}
-
-const INITIAL_MESSAGES = [
-  {
-    id: 1,
-    type: 'received',
-    text: "Hey! I saw we matched on Flatmate. I'm looking for a flatmate in Malasaña — are you familiar with the area?",
-    time: '10:14',
-  },
-  {
-    id: 2,
-    type: 'system',
-    text: '💡 Your agents found you have compatible schedules and similar cleanliness preferences.',
-  },
-  {
-    id: 3,
-    type: 'sent',
-    text: 'Yes! I love Malasaña. I work from home a few days a week so a quiet flat is important to me.',
-    time: '10:16',
-  },
-  {
-    id: 4,
-    type: 'received',
-    text: "Same here! I'm also WFH most of the time. The flat I'm looking at on Calle del Pez has a dedicated desk space.",
-    time: '10:17',
-  },
-  {
-    id: 5,
-    type: 'sent',
-    text: 'That sounds perfect. Would you be open to a quick call this week?',
-    time: '10:19',
-  },
-]
-
-function Bubble({ msg, prevType }) {
-  // Reduce corner radius on the side adjacent to same-sender bubble above
-  const sameSenderAbove = prevType === msg.type
-  const isReceived = msg.type === 'received'
+/* ── Bubble ──────────────────────────────────────────────────── */
+function Bubble({ msg, prevType, currentUserId }) {
+  const isSent = msg.sender_id === currentUserId
+  const sameSenderAbove = isSent ? prevType === 'sent' : prevType === 'received'
+  const isOptimistic = Boolean(msg._optimistic)
 
   const baseRadius = 18
   const tightCorner = 4
 
-  const borderRadius = isReceived
-    ? `${sameSenderAbove ? tightCorner : baseRadius}px ${baseRadius}px ${baseRadius}px ${baseRadius}px`
-    : `${baseRadius}px ${sameSenderAbove ? tightCorner : baseRadius}px ${baseRadius}px ${baseRadius}px`
+  const borderRadius = isSent
+    ? `${baseRadius}px ${sameSenderAbove ? tightCorner : baseRadius}px ${baseRadius}px ${baseRadius}px`
+    : `${sameSenderAbove ? tightCorner : baseRadius}px ${baseRadius}px ${baseRadius}px ${baseRadius}px`
+
+  const time = msg.created_at
+    ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null
 
   return (
     <div
-      className={`flex ${isReceived ? 'justify-start' : 'justify-end'} ${sameSenderAbove ? 'mt-1' : 'mt-3'}`}
+      className={`flex ${isSent ? 'justify-end' : 'justify-start'} ${sameSenderAbove ? 'mt-1' : 'mt-3'}`}
     >
-      {isReceived && !sameSenderAbove && (
-        <img
-          src={MATCH.avatar}
-          alt={MATCH.name}
-          className="w-7 h-7 rounded-full object-cover mr-2 mt-auto shrink-0"
-        />
-      )}
-      {isReceived && sameSenderAbove && <div className="w-7 mr-2 shrink-0" />}
-
       <div
         className="max-w-xs px-4 py-2.5 text-body"
         style={{
           borderRadius,
-          background: isReceived ? 'var(--surface)' : 'var(--accent)',
-          color: isReceived ? 'var(--text-primary)' : '#fff',
+          background: isSent ? 'var(--accent)' : 'var(--surface)',
+          color: isSent ? '#fff' : 'var(--text-primary)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          opacity: isOptimistic ? 0.7 : 1,
         }}
       >
-        <p>{msg.text}</p>
-        {msg.time && (
+        <p>{msg.content}</p>
+        {time && (
           <p
             className="text-meta mt-1 text-right"
-            style={{ color: isReceived ? 'var(--text-secondary)' : 'rgba(255,255,255,0.65)' }}
+            style={{ color: isSent ? 'rgba(255,255,255,0.65)' : 'var(--text-secondary)' }}
           >
-            {msg.time}
+            {time}
           </p>
         )}
       </div>
@@ -87,6 +50,7 @@ function Bubble({ msg, prevType }) {
   )
 }
 
+/* ── System Message ──────────────────────────────────────────── */
 function SystemMessage({ text }) {
   return (
     <div className="my-4 mx-4">
@@ -100,29 +64,48 @@ function SystemMessage({ text }) {
   )
 }
 
+/* ── Skeleton ────────────────────────────────────────────────── */
+function ChatSkeleton() {
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-body" style={{ color: 'var(--text-secondary)' }}>
+        Loading conversation…
+      </p>
+    </div>
+  )
+}
+
+/* ── Chat Page ───────────────────────────────────────────────── */
 export function Chat() {
   const navigate = useNavigate()
-  const [messages, setMessages] = useState(INITIAL_MESSAGES)
+  const { matchId } = useParams()
   const [input, setInput] = useState('')
+  const [matchData, setMatchData] = useState(null)
+  const [currentUserId, setCurrentUserId] = useState(null)
   const bottomRef = useRef(null)
 
+  const { messages, isLoading, sendMessage, userId } = useChat({ matchId })
+
+  // Resolve current user and match metadata for header display
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id ?? null)
+      if (user && matchId) {
+        getMatchById(matchId, user.id).then(setMatchData)
+      }
+    })
+  }, [matchId])
+
+  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  function send() {
+  async function send() {
     const text = input.trim()
     if (!text) return
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: 'sent',
-        text,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ])
     setInput('')
+    await sendMessage(text)
   }
 
   function handleKey(e) {
@@ -132,11 +115,20 @@ export function Chat() {
     }
   }
 
+  // Derive header info from match data
+  const otherName =
+    matchData?.type === 'flatmate'
+      ? matchData.data?.name ?? 'Flatmate'
+      : matchData?.data?.address ?? 'Match'
+
+  const otherAvatar =
+    matchData?.type === 'flatmate' ? matchData.data?.avatar ?? null : null
+
+  const matchLabel =
+    matchData?.type === 'flatmate' ? 'Matched via Flatmate' : 'Matched via Listing'
+
   return (
-    <div
-      className="flex flex-col h-screen"
-      style={{ background: 'var(--background)' }}
-    >
+    <div className="flex flex-col h-screen" style={{ background: 'var(--background)' }}>
       {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 shrink-0"
@@ -150,18 +142,20 @@ export function Chat() {
           <ArrowLeft size={18} />
         </button>
 
-        <img
-          src={MATCH.avatar}
-          alt={MATCH.name}
-          className="w-9 h-9 rounded-full object-cover shrink-0"
-        />
+        {otherAvatar && (
+          <img
+            src={otherAvatar}
+            alt={otherName}
+            className="w-9 h-9 rounded-full object-cover shrink-0"
+          />
+        )}
 
         <div className="flex-1 min-w-0">
           <p className="text-body font-semibold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
-            {MATCH.name}
+            {otherName}
           </p>
           <p className="text-meta" style={{ color: 'var(--text-secondary)' }}>
-            Matched via Flatmate
+            {matchLabel}
           </p>
         </div>
 
@@ -175,32 +169,53 @@ export function Chat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {/* Today divider */}
-        <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
-          <span className="text-meta" style={{ color: 'var(--text-secondary)' }}>Today</span>
-          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
-        </div>
+        {isLoading ? (
+          <ChatSkeleton />
+        ) : (
+          <>
+            {/* Agent insight banner */}
+            {matchData && (
+              <SystemMessage
+                text={`💡 Your agents matched you based on compatibility score ${matchData.score}%.`}
+              />
+            )}
 
-        {messages.map((msg, i) => {
-          if (msg.type === 'system') {
-            return <SystemMessage key={msg.id} text={msg.text} />
-          }
-          const prev = messages[i - 1]
-          const prevType = prev?.type === 'system' ? null : prev?.type
-          return <Bubble key={msg.id} msg={msg} prevType={prevType} />
-        })}
+            {/* Date divider */}
+            <div className="flex items-center gap-3 my-4">
+              <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <span className="text-meta" style={{ color: 'var(--text-secondary)' }}>Today</span>
+              <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            </div>
 
-        <div ref={bottomRef} />
+            {messages.length === 0 && (
+              <p className="text-center text-body py-8" style={{ color: 'var(--text-secondary)' }}>
+                No messages yet. Say hello!
+              </p>
+            )}
+
+            {messages.map((msg, i) => {
+              const prev = messages[i - 1]
+              const prevIsSent = prev?.sender_id === currentUserId
+              const prevType = prev ? (prevIsSent ? 'sent' : 'received') : null
+              return (
+                <Bubble
+                  key={msg.id}
+                  msg={msg}
+                  prevType={prevType}
+                  currentUserId={currentUserId}
+                />
+              )
+            })}
+
+            <div ref={bottomRef} />
+          </>
+        )}
       </div>
 
       {/* Input bar */}
       <div
         className="shrink-0 flex items-center gap-3 px-4 py-3"
-        style={{
-          background: 'var(--surface)',
-          boxShadow: '0 -1px 0 rgba(255,255,255,0.06)',
-        }}
+        style={{ background: 'var(--surface)', boxShadow: '0 -1px 0 rgba(255,255,255,0.06)' }}
       >
         <input
           type="text"
@@ -209,11 +224,7 @@ export function Chat() {
           onKeyDown={handleKey}
           placeholder="Message…"
           className="flex-1 min-w-0 px-4 py-2.5 rounded-chip text-body outline-none transition-all duration-200"
-          style={{
-            background: 'var(--background)',
-            color: 'var(--text-primary)',
-            border: 'none',
-          }}
+          style={{ background: 'var(--background)', color: 'var(--text-primary)', border: 'none' }}
         />
         <button
           onClick={send}

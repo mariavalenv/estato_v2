@@ -5943,10 +5943,12 @@ export default function App() {
       if (currentUser) {
         setShowAuthModal(false);
         try { const p = await db.getProfile(currentUser.id); setProfile(p); } catch { }
+        let hasExistingConvos = false;
         try {
           const convos = await db.getConversations(currentUser.id);
           setSavedConversations(convos);
-          if (convos.length > 0 && !newChatInProgress.current) {
+          hasExistingConvos = convos.length > 0;
+          if (hasExistingConvos && !newChatInProgress.current) {
             const full = await db.getConversation(convos[0].id);
             setConversationId(full.id); setMessages(full.messages || []);
             setRecommendations(full.recommendations || []); setSummaryText(full.summary || "");
@@ -5954,7 +5956,29 @@ export default function App() {
           }
         } catch { }
         try { const favs = await db.getFavourites(currentUser.id); setFavourites(favs); } catch { }
-        try { const prefs = await db.getPreferences(currentUser.id); if (prefs) { setUserPrefs(prefs); } else { setShowPathChooser(true); } } catch { setShowPathChooser(true); }
+        try {
+          let prefs = await db.getPreferences(currentUser.id);
+          console.log("[estato] getPreferences result:", prefs ? "found" : "null");
+          if (prefs) {
+            setUserPrefs(prefs);
+          } else {
+            // No Supabase prefs yet — check if the screening/form saved data locally
+            let local = null;
+            try { local = JSON.parse(localStorage.getItem('estato_user_profile') || 'null'); } catch { /* ignore */ }
+            console.log("[estato] local profile:", local ? `city=${local.city || local.cities?.[0]}` : "null");
+            if (local && (local.city || local.cities?.length)) {
+              // Migrate local data to Supabase, then fetch the normalised row back
+              try { await db.savePreferences(currentUser.id, local); } catch (e) { console.error("[estato] migration save failed:", e?.message, e?.code); }
+              try { prefs = await db.getPreferences(currentUser.id); } catch (e) { console.error("[estato] migration getPrefs failed:", e?.message); }
+              setUserPrefs(prefs || local);
+              // Only auto-start the agent for first-time logins with no prior conversations
+              if (!hasExistingConvos) startChat(prefs || local, false);
+            } else {
+              console.log("[estato] no local prefs → showing PathChooser");
+              setShowPathChooser(true);
+            }
+          }
+        } catch (e) { console.error("[estato] prefs load error:", e?.message); setShowPathChooser(true); }
         setDirectConversations(loadDirectConvos(currentUser.id));
         try {
           const dbListings = await db.getLandlordListings(currentUser.id);
@@ -6114,7 +6138,7 @@ export default function App() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1200, system: buildSystemPrompt(userPrefs), messages: history })
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1200, system: buildSystemPrompt(userPrefs), messages: history })
     });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || "API error"); }
     const data = await res.json();

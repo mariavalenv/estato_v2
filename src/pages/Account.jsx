@@ -19,7 +19,10 @@ const MADRID_NEIGHBOURHOODS = [
 ]
 
 const TIMELINES = ['ASAP', '1–3 months', 'Just exploring']
-const OCCUPANTS = ['Just me', 'Couple', 'Me + my flatmate']
+const PET_OPTIONS = [
+  { id: 'dog', label: 'Dog' },
+  { id: 'cat', label: 'Cat' },
+]
 const MUST_HAVE_OPTIONS = [
   'Lift', 'Balcony / terrace', 'Furnished', 'Pets allowed',
   'Parking', 'Natural light', 'Recently renovated',
@@ -114,7 +117,8 @@ export function Account() {
   const [budgetMax, setBudgetMax] = useState('')
   const [flatType, setFlatType] = useState('')
   const [bedrooms, setBedrooms] = useState(1)
-  const [occupants, setOccupants] = useState('')
+  const [adults, setAdults] = useState(1)
+  const [pets, setPets] = useState([])
   const [mustHaves, setMustHaves] = useState([])
   const [commuteAnchor, setCommuteAnchor] = useState('')
   const [dealBreakers, setDealBreakers] = useState('')
@@ -126,25 +130,33 @@ export function Account() {
   // Load user + preferences on mount
   useEffect(() => {
     async function load() {
+      let u = null
       try {
-        const { data: { user: u } } = await supabase.auth.getUser()
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        u = authUser
         setUser(u)
-
-        // Load from Supabase first, fall back to localStorage
-        let prefs = null
-        if (u) {
-          prefs = await db.getPreferences(u.id)
-        }
-        if (!prefs) {
-          try { prefs = JSON.parse(localStorage.getItem('estato_user_profile') || 'null') } catch { /* ignore */ }
-        }
-
-        if (prefs) applyPrefs(prefs)
       } catch (err) {
-        console.error('Failed to load preferences:', err)
-      } finally {
-        setLoading(false)
+        console.error('Failed to get user:', err)
       }
+
+      let prefs = null
+
+      // Try Supabase first (isolated so a failure doesn't block localStorage)
+      if (u) {
+        try {
+          prefs = await db.getPreferences(u.id)
+        } catch (err) {
+          console.warn('Could not load preferences from Supabase:', err)
+        }
+      }
+
+      // Always fall back to localStorage if nothing came from Supabase
+      if (!prefs) {
+        try { prefs = JSON.parse(localStorage.getItem('estato_user_profile') || 'null') } catch { /* ignore */ }
+      }
+
+      if (prefs) applyPrefs(prefs)
+      setLoading(false)
     }
     load()
   }, [])
@@ -160,7 +172,15 @@ export function Account() {
     const rawBeds = prefs.bedrooms
     if (rawBeds === 'Studio' || rawBeds === 0 || rawBeds === '0') setBedrooms(0)
     else setBedrooms(parseInt(rawBeds, 10) || 1)
-    setOccupants(prefs.occupants || '')
+    // adults: prefer new field; migrate from legacy `occupants` string if present
+    if (typeof prefs.adults === 'number') {
+      setAdults(Math.max(1, prefs.adults))
+    } else if (prefs.occupants === 'Couple' || prefs.occupants === 'Me + my flatmate') {
+      setAdults(2)
+    } else if (prefs.occupants === 'Just me') {
+      setAdults(1)
+    }
+    setPets(Array.isArray(prefs.pets) ? prefs.pets : [])
     setMustHaves(prefs.must_haves || [])
     setCommuteAnchor(prefs.commute_anchor || '')
     setDealBreakers(Array.isArray(prefs.deal_breakers) ? prefs.deal_breakers.join(', ') : prefs.deal_breakers || '')
@@ -172,6 +192,10 @@ export function Account() {
 
   function toggleMustHave(m) {
     setMustHaves(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
+  }
+
+  function togglePet(p) {
+    setPets(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])
   }
 
   async function handleSave(e) {
@@ -187,22 +211,28 @@ export function Account() {
       },
       flat_type: flatType,
       bedrooms: bedrooms === 0 ? 'Studio' : bedrooms,
-      occupants,
+      adults,
+      pets,
       must_haves: mustHaves,
       commute_anchor: commuteAnchor.trim(),
       deal_breakers: dealBreakers.split(',').map(s => s.trim()).filter(Boolean),
     }
 
-    try {
-      localStorage.setItem('estato_user_profile', JSON.stringify(prefs))
-      if (user) await db.savePreferences(user.id, prefs)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
-    } catch (err) {
-      console.error('Failed to save preferences:', err)
-    } finally {
-      setSaving(false)
+    // Always save to localStorage immediately
+    try { localStorage.setItem('estato_user_profile', JSON.stringify(prefs)) } catch { /* ignore */ }
+
+    // Then try Supabase (failure is non-fatal — localStorage is the source of truth on this device)
+    if (user) {
+      try {
+        await db.savePreferences(user.id, prefs)
+      } catch (err) {
+        console.warn('Could not sync preferences to Supabase:', err)
+      }
     }
+
+    setSaved(true)
+    setSaving(false)
+    setTimeout(() => setSaved(false), 2500)
   }
 
   async function handleSignOut() {
@@ -457,12 +487,60 @@ export function Account() {
             </div>
           </div>
 
-          {/* Who's moving in */}
+          {/* People moving in */}
           <div>
-            <FieldLabel>Who's moving in?</FieldLabel>
+            <FieldLabel>People moving in</FieldLabel>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button
+                type="button"
+                onClick={() => setAdults(a => Math.max(1, a - 1))}
+                disabled={adults === 1}
+                style={{
+                  width: 36, height: 36, borderRadius: 8, border: 'none',
+                  background: 'rgba(255,255,255,0.07)',
+                  color: adults === 1 ? 'var(--text-secondary)' : 'var(--text-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: adults === 1 ? 'not-allowed' : 'pointer',
+                  opacity: adults === 1 ? 0.4 : 1, transition: 'all 200ms ease', flexShrink: 0,
+                }}
+              >
+                <Minus size={16} />
+              </button>
+              <span style={{
+                fontSize: 17, fontWeight: 600, color: 'var(--text-primary)',
+                minWidth: 70, textAlign: 'center',
+              }}>
+                {adults === 1 ? 'Just me' : `${adults} people`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAdults(a => Math.min(8, a + 1))}
+                disabled={adults === 8}
+                style={{
+                  width: 36, height: 36, borderRadius: 8, border: 'none',
+                  background: 'rgba(255,255,255,0.07)',
+                  color: adults === 8 ? 'var(--text-secondary)' : 'var(--text-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: adults === 8 ? 'not-allowed' : 'pointer',
+                  opacity: adults === 8 ? 0.4 : 1, transition: 'all 200ms ease', flexShrink: 0,
+                }}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Pets */}
+          <div>
+            <FieldLabel>Pets</FieldLabel>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {OCCUPANTS.map(o => (
-                <PillButton key={o} label={o} selected={occupants === o} onClick={() => setOccupants(occupants === o ? '' : o)} />
+              {PET_OPTIONS.map(p => (
+                <PillButton
+                  key={p.id}
+                  label={p.label}
+                  selected={pets.includes(p.id)}
+                  onClick={() => togglePet(p.id)}
+                />
               ))}
             </div>
           </div>

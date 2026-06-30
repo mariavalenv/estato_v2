@@ -1,27 +1,57 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Shield, Sparkles, Clock3, X, Eye, EyeOff, Search } from 'lucide-react'
+import { ArrowRight, X, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { auth } from '../supabase'
+import { auth, supabase } from '../supabase'
 
-/* ── Constants ───────────────────────────────────────────────── */
+/* ── Themes ──────────────────────────────────────────────────── */
+/* Two palettes the user can toggle between. Add more here and    */
+/* they'll show up automatically in the theme switcher.           */
 
-const FEATURES = [
-  { icon: Shield,   label: 'Private by design' },
-  { icon: Sparkles, label: 'AI that understands you' },
-  { icon: Clock3,   label: 'Save hours of searching' },
-]
+const THEMES = {
+  light: {
+    id:       'light',
+    label:    'LIGHT',
+    bg:       '#FFFFFF',
+    ink:      '#000000',
+    headline: '#000000',
+    sub:      '#555555',
+    hairline: 'rgba(0,0,0,0.18)',
+    pillBg:   '#FFFFFF',
+    logoBg:   '#C94A3D',           // red dog on white bg
+  },
+  terracotta: {
+    id:       'terracotta',
+    label:    'WARM',
+    bg:       '#C94A3D',
+    ink:      '#111111',
+    headline: 'rgba(255,220,210,0.95)',
+    sub:      'rgba(255,255,255,0.75)',
+    hairline: 'rgba(0,0,0,0.18)',
+    pillBg:   '#FFF5EF',
+    logoBg:   '#FFFFFF',           // white dog on red bg
+  },
+}
+const THEME_ORDER = ['light', 'terracotta']
 
-const DARK = {
-  bg:      '#080B0C',
-  surface: '#121214',
-  accent:  '#6386F1',
-  success: '#34D399',
-  text:    '#F5F5F7',
-  sub:     '#9A9AA0',
+// Kept for the auth modal which still uses a white sheet.
+const INK = {
+  bg:      '#FFFFFF',
+  paper:   '#FFFFFF',
+  ink:     '#000000',
+  hairline:'rgba(0,0,0,0.12)',
+  sub:     '#555555',
 }
 
-/* ── Auth modal — keeps framer-motion, only mounts on interaction ── */
+const CHARACTERS = [
+  { id: 'woman', label: 'WOMAN', src: '/char-woman.png' },
+  { id: 'man',   label: 'MAN',   src: '/char-man.png'   },
+  { id: 'box',   label: 'BOX',   src: '/char-box.png'   },
+  { id: 'dog',   label: 'DOG',   src: '/char-dog.png'   },
+  { id: 'cat',   label: 'CAT',   src: '/char-cat.png'   },
+]
+
+/* ── Auth modal ──────────────────────────────────────────────── */
 
 function AuthModal({ mode: initialMode, onClose, onSuccess }) {
   const [mode, setMode]         = useState(initialMode)
@@ -52,13 +82,13 @@ function AuthModal({ mode: initialMode, onClose, onSuccess }) {
 
   const inputStyle = {
     width: '100%',
-    background: 'rgba(255,255,255,0.06)',
-    border: 'none',
-    borderRadius: 8,
-    padding: '11px 14px',
+    background: '#fff',
+    border: `1.5px solid ${INK.hairline}`,
+    borderRadius: 10,
+    padding: '12px 14px',
     fontSize: 15,
-    color: DARK.text,
-    caretColor: DARK.accent,
+    color: INK.ink,
+    caretColor: INK.ink,
     boxSizing: 'border-box',
     outline: 'none',
     fontFamily: 'inherit',
@@ -72,122 +102,120 @@ function AuthModal({ mode: initialMode, onClose, onSuccess }) {
       style={{
         position: 'fixed', inset: 0, zIndex: 50,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
+        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
         padding: 24,
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ duration: 0.22, ease: 'easeOut' }}
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          width: '100%', maxWidth: 400,
-          background: DARK.surface,
-          borderRadius: 16,
+          background: '#fff',
+          borderRadius: 20,
           padding: 32,
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+          width: '100%',
+          maxWidth: 400,
+          boxShadow: '0 24px 80px rgba(0,0,0,0.25)',
           position: 'relative',
+          border: `2px solid ${INK.ink}`,
         }}
       >
         <button
           onClick={onClose}
           style={{
             position: 'absolute', top: 16, right: 16,
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: DARK.sub, padding: 4, display: 'flex',
+            background: '#fff', border: `1.5px solid ${INK.hairline}`, borderRadius: '50%',
+            width: 32, height: 32, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: INK.ink,
           }}
         >
-          <X size={18} />
+          <X size={16} />
         </button>
 
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.15em', color: DARK.accent, textTransform: 'uppercase', marginBottom: 8 }}>
-            ✦ ESTATO
-          </p>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: DARK.text, margin: 0 }}>
-            {mode === 'signup' ? 'Create your account' : 'Welcome back'}
-          </h2>
-          <p style={{ fontSize: 14, color: DARK.sub, marginTop: 6 }}>
-            {mode === 'signup'
-              ? 'Your agent is ready to start searching.'
-              : 'Sign in to pick up where you left off.'}
-          </p>
-        </div>
+        <p style={{ fontFamily: 'Archivo Black, Inter, sans-serif', fontSize: 24, color: INK.ink, marginBottom: 8, letterSpacing: '-0.01em' }}>
+          {mode === 'signup' ? 'CREATE ACCOUNT' : 'WELCOME BACK'}
+        </p>
+        <p style={{ fontSize: 14, color: INK.sub, marginBottom: 24 }}>
+          {mode === 'signup' ? 'Your agent is one step away.' : 'Pick up where you left off.'}
+        </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {mode === 'signup' && (
             <input
+              style={inputStyle}
               type="text"
               placeholder="Full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              style={inputStyle}
             />
           )}
           <input
+            style={inputStyle}
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={inputStyle}
           />
           <div style={{ position: 'relative' }}>
             <input
+              style={{ ...inputStyle, paddingRight: 44 }}
               type={showPw ? 'text' : 'password'}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ ...inputStyle, paddingRight: 44 }}
             />
             <button
               type="button"
-              onClick={() => setShowPw((v) => !v)}
+              onClick={() => setShowPw(!showPw)}
               style={{
-                position: 'absolute', right: 12, top: '50%',
-                transform: 'translateY(-50%)',
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: DARK.sub, display: 'flex', padding: 0,
+                color: INK.sub, padding: 0, display: 'flex',
               }}
             >
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
 
-          {error && <p style={{ fontSize: 13, color: '#F87171', margin: 0 }}>{error}</p>}
+          {error && (
+            <p style={{ fontSize: 13, color: '#e05252', margin: 0 }}>{error}</p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             style={{
-              marginTop: 4,
-              width: '100%', padding: '12px 0',
-              borderRadius: 8, border: 'none',
-              background: loading ? 'rgba(99,134,241,0.5)' : DARK.accent,
-              color: '#fff', fontSize: 15, fontWeight: 600,
+              marginTop: 8,
+              padding: '14px 0',
+              borderRadius: 10,
+              background: loading ? '#3a3a3a' : INK.ink,
+              color: '#fff',
+              fontFamily: 'Archivo Black, Inter, sans-serif',
+              fontSize: 14,
+              letterSpacing: '0.04em',
+              border: 'none',
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'opacity 200ms ease',
-              fontFamily: 'inherit',
             }}
           >
-            {loading
-              ? (mode === 'signup' ? 'Creating account…' : 'Signing in…')
-              : (mode === 'signup' ? 'Create account' : 'Sign in')}
+            {loading ? 'ONE MOMENT…' : mode === 'signup' ? 'CREATE ACCOUNT' : 'SIGN IN'}
           </button>
         </form>
 
-        <p style={{ marginTop: 20, fontSize: 14, color: DARK.sub, textAlign: 'center' }}>
-          {mode === 'signup' ? 'Already have an account? ' : 'No account yet? '}
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: INK.sub }}>
+          {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
           <button
             onClick={() => { setMode(mode === 'signup' ? 'login' : 'signup'); setError('') }}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: DARK.accent, fontSize: 14, fontWeight: 500, padding: 0,
-              fontFamily: 'inherit',
+              color: INK.ink, fontSize: 14, fontWeight: 600, padding: 0,
+              fontFamily: 'inherit', textDecoration: 'underline',
             }}
           >
             {mode === 'signup' ? 'Sign in' : 'Create one'}
@@ -198,281 +226,312 @@ function AuthModal({ mode: initialMode, onClose, onSuccess }) {
   )
 }
 
-/* ── Agent preview card ──────────────────────────────────────── */
-
-function AgentCard() {
-  return (
-    <div style={{
-      borderRadius: 24,
-      border: '1px solid rgba(255,255,255,0.09)',
-      background: 'rgba(14,15,18,0.96)',
-      padding: 20,
-      boxShadow: '0 20px 80px rgba(0,0,0,0.55)',
-    }}>
-      {/* Status header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div>
-          <p style={{ fontSize: 13, color: DARK.sub }}>Agent status</p>
-          <h2 style={{ fontSize: 20, fontWeight: 500, color: DARK.text, marginTop: 4, letterSpacing: '-0.02em' }}>Quietly working for you</h2>
-        </div>
-        <div style={{
-          borderRadius: 999, border: '1px solid rgba(52,211,105,0.2)',
-          background: 'rgba(52,211,105,0.1)', padding: '4px 12px',
-          fontSize: 13, color: DARK.success,
-        }}>Active</div>
-      </div>
-
-      {/* Main stat block */}
-      <div style={{
-        borderRadius: 16, border: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(0,0,0,0.25)', padding: 20,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-          <div>
-            <p style={{ fontSize: 12, color: DARK.sub }}>Today</p>
-            <p style={{ fontSize: 28, fontWeight: 500, color: '#c8d8ff', marginTop: 8, letterSpacing: '-0.03em' }}>14 flats reviewed</p>
-          </div>
-          <div style={{
-            borderRadius: 12, background: 'rgba(255,255,255,0.05)',
-            padding: '8px 12px', textAlign: 'right',
-          }}>
-            <p style={{ fontSize: 12, color: DARK.sub }}>Confidence</p>
-            <p style={{ fontSize: 17, fontWeight: 500, color: DARK.text }}>High</p>
-          </div>
-        </div>
-
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '16px 0' }} />
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {['8 min commute match', 'Within your budget', 'Quiet neighbourhood', 'Awaiting your approval'].map((item) => (
-            <div key={item} style={{
-              borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)',
-              background: 'rgba(255,255,255,0.03)',
-              padding: '10px 14px', fontSize: 13, color: 'rgba(255,255,255,0.58)',
-              lineHeight: 1.4,
-            }}>
-              {item}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 10 }}>
-        {[
-          { label: 'Strong matches', value: '3' },
-          { label: 'Outreach sent', value: '2' },
-          { label: 'Next update', value: '2h' },
-        ].map((s) => (
-          <div key={s.label} style={{
-            borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)',
-            background: 'rgba(255,255,255,0.03)', padding: 14,
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 500, color: DARK.text, letterSpacing: '-0.03em' }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: DARK.sub, marginTop: 4 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 /* ── Main page ───────────────────────────────────────────────── */
 
 export function Landing() {
   const navigate = useNavigate()
-  const [modal, setModal] = useState(null) // null | 'signup' | 'login'
+  const [modal, setModal] = useState(null)
+  const [picked, setPicked] = useState(() => new Set())
+  const [themeId, setThemeId] = useState(() => {
+    try { return localStorage.getItem('estato:landingTheme') || 'light' } catch { return 'light' }
+  })
+  const THEME = THEMES[themeId] || THEMES.light
 
-  function handleAuthSuccess() {
+  function cycleTheme() {
+    const idx = THEME_ORDER.indexOf(themeId)
+    const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length]
+    setThemeId(next)
+    try { localStorage.setItem('estato:landingTheme', next) } catch {}
+  }
+
+  function togglePick(id) {
+    setPicked((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  async function handleAuthSuccess() {
     setModal(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user && picked.size > 0) {
+        try { sessionStorage.setItem('estato:household', JSON.stringify([...picked])) } catch {}
+      }
+      if (user) {
+        const { data: prefs } = await supabase
+          .from('search_preferences')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle()
+        if (prefs) {
+          navigate('/dashboard')
+          return
+        }
+      }
+    } catch {}
     navigate('/onboarding')
   }
+
+  function handleStart() {
+    if (picked.size > 0) {
+      try { sessionStorage.setItem('estato:household', JSON.stringify([...picked])) } catch {}
+    }
+    setModal('signup')
+  }
+
+  const hasPicked = picked.size > 0
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: `radial-gradient(ellipse at 50% 0%, rgba(99,134,241,0.1) 0%, transparent 60%), ${DARK.bg}`,
-      color: DARK.text,
+      background: THEME.bg,
+      color: THEME.ink,
       overflow: 'hidden',
       fontFamily: 'Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'background 0.5s ease, color 0.5s ease',
     }}>
-      {/* Dot grid — pure CSS, zero paint cost */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-        opacity: 0.04,
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 0.6px, transparent 0.6px)',
-        backgroundSize: '18px 18px',
-      }} />
-
-      <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh' }}>
-
-        {/* ── Header ── */}
-        <header className="l-fade l-d0" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '24px 40px', maxWidth: 1280, margin: '0 auto',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.06)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14,
-            }}>✦</div>
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase' }}>ESTATO</span>
-          </div>
-
-          <button
-            onClick={() => setModal('login')}
-            className="l-ghost"
+      {/* ── Header ── */}
+      <header style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '24px 40px', maxWidth: 1440, margin: '0 auto', width: '100%',
+        boxSizing: 'border-box',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <motion.button
+            type="button"
+            onClick={cycleTheme}
+            aria-label={`Change background (current: ${THEME.label.toLowerCase()})`}
+            title="Click to change background"
+            animate={{ rotate: [0, -6, 6, -4, 4, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.92, rotate: 360 }}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.04)', padding: '8px 18px',
-              fontSize: 14, color: 'rgba(255,255,255,0.7)',
-              cursor: 'pointer', fontFamily: 'inherit',
+              width: 42, height: 42, borderRadius: '50%',
+              border: `2px solid ${THEME.ink}`,
+              overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: THEME.logoBg,
+              padding: 0,
+              cursor: 'pointer',
+              transition: 'background 0.4s ease, border-color 0.4s ease',
             }}
           >
-            Log in
-          </button>
-        </header>
+            <img
+              src="/logo-dog.png"
+              alt="Estato"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+              draggable={false}
+            />
+          </motion.button>
+          <span style={{
+            fontFamily: 'Archivo Black, Inter, sans-serif',
+            fontSize: 14, letterSpacing: '0.22em', color: THEME.ink,
+          }}>ESTATO</span>
+        </div>
 
-        {/* ── Main content ── */}
-        <main style={{
-          display: 'grid', gridTemplateColumns: '1fr',
-          alignItems: 'center', gap: 48,
-          maxWidth: 1280, margin: '0 auto',
-          padding: '20px 40px 60px',
-          minHeight: 'calc(100vh - 92px)',
-        }}
-          className="lg:grid-cols-[1.05fr_0.95fr]"
+        <button
+          onClick={() => setModal('login')}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            borderRadius: 999, border: `2px solid ${THEME.ink}`,
+            background: THEME.pillBg, padding: '9px 22px',
+            fontFamily: 'Archivo Black, Inter, sans-serif',
+            fontSize: 12, letterSpacing: '0.1em', color: THEME.ink,
+            cursor: 'pointer',
+            transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease',
+          }}
         >
-          {/* Left: copy */}
-          <div style={{ maxWidth: 600 }}>
+          LOG IN
+        </button>
+      </header>
 
-            {/* Badge */}
-            <div className="l-fade l-d1" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)', padding: '7px 14px',
-              fontSize: 13, color: 'rgba(255,255,255,0.72)',
-              marginBottom: 24,
-            }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: '50%',
-                background: DARK.success, flexShrink: 0,
-                boxShadow: '0 0 8px rgba(52,211,105,0.7)',
-              }} />
-              Your flat search agent, reimagined
-            </div>
-
-            {/* Headline */}
-            <h1 className="l-fade l-d2" style={{
-              fontSize: 'clamp(44px, 7vw, 72px)',
-              fontWeight: 500,
-              lineHeight: 0.92,
-              letterSpacing: '-0.045em',
-              color: '#c8d8ff',
-              margin: 0,
-            }}>
-              Find your flat.
-              <br />
-              And your people.
-            </h1>
-
-            {/* Subtitle */}
-            <p className="l-fade l-d3" style={{
-              fontSize: 18, lineHeight: 1.7,
-              color: 'rgba(255,255,255,0.52)',
-              marginTop: 24, maxWidth: 480,
-            }}>
-              Delegate the search to an agent that knows your rhythm, your budget, and what home should feel like.
-            </p>
-
-            {/* CTAs */}
-            <div className="l-fade l-d4" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 40, alignItems: 'center' }}>
-
-              {/* Primary CTA — CSS hover via .l-cta */}
-              <button
-                onClick={() => setModal('signup')}
-                className="l-cta"
-                style={{
-                  position: 'relative',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  height: 60, minWidth: 240,
-                  borderRadius: 999, border: '1px solid rgba(99,134,241,0.35)',
-                  background: 'linear-gradient(135deg, rgba(99,134,241,0.18), rgba(99,134,241,0.06))',
-                  padding: '0 28px',
-                  fontSize: 16, fontWeight: 500, color: '#c8d8ff',
-                  boxShadow: '0 4px 32px rgba(99,134,241,0.15)',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                <Sparkles size={16} style={{ marginRight: 10, flexShrink: 0 }} />
-                Create an account
-                <ArrowRight className="l-arrow" size={16} style={{ marginLeft: 10, flexShrink: 0 }} />
-              </button>
-
-              {/* Secondary CTA */}
-              <button
-                onClick={() => navigate('/onboarding')}
-                className="l-ghost"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  height: 60, minWidth: 190,
-                  borderRadius: 999, border: '1px solid rgba(255,255,255,0.11)',
-                  background: 'rgba(255,255,255,0.04)', padding: '0 28px',
-                  fontSize: 16, fontWeight: 500, color: 'rgba(255,255,255,0.78)',
-                  cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                <Search size={16} />
-                Start flat-hunting
-              </button>
-            </div>
-
-            {/* Feature chips */}
-            <div className="l-fade l-d5" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 32 }}>
-              {FEATURES.map(({ icon: Icon, label }) => (
-                <div key={label} style={{
-                  display: 'flex', alignItems: 'center', gap: 7,
-                  borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)',
-                  background: 'rgba(255,255,255,0.03)', padding: '7px 13px',
-                  fontSize: 13, color: 'rgba(255,255,255,0.48)',
-                }}>
-                  <Icon size={14} color='#a8bfff' />
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: agent card (desktop only) */}
-          <div
-            className="l-fade l-d3 lg:!block"
-            style={{ display: 'none', width: '100%', maxWidth: 480 }}
-          >
-            <AgentCard />
-          </div>
-        </main>
-
-        {/* Floating ✦ orb — CSS animation, compositor thread */}
+      {/* ── Main: hero stage ── */}
+      <main style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0 24px 24px',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}>
+        {/* The hero stage: headline + characters, layered */}
         <div style={{
-          position: 'absolute', left: '50%', top: '12%',
-          transform: 'translateX(-50%)', zIndex: 10, pointerEvents: 'none',
+          position: 'relative',
+          width: '100%',
+          maxWidth: 3400,
+          aspectRatio: '2 / 1',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
         }}>
-          <div style={{
-            width: 40, height: 40,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'landing-orb 3.4s ease-in-out infinite',
+          {/* Headline behind */}
+          <h1 style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            paddingTop: '4%',
+            fontFamily: 'Archivo Black, Inter, sans-serif',
+            fontSize: 'clamp(56px, 12vw, 200px)',
+            lineHeight: 0.84,
+            letterSpacing: '-0.04em',
+            color: THEME.headline,
+            margin: 0,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            zIndex: 1,
+            pointerEvents: 'none',
           }}>
-            <span style={{ fontSize: 18, filter: 'drop-shadow(0 0 12px rgba(99,134,241,0.85))', color: '#a8bfff' }}>✦</span>
+            <span style={{ display: 'block' }}>
+              LET'S<br />EXPLORE<br />YOUR<br />OPTIONS
+            </span>
+          </h1>
+
+          {/* Animated, clickable characters — each with its label pill directly below */}
+          <div style={{
+            position: 'absolute',
+            bottom: '2%',
+            left: 0,
+            right: 0,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            gap: 0,
+            padding: 0,
+            zIndex: 2,
+          }}>
+            {CHARACTERS.map((c, i) => {
+              const selected = picked.has(c.id)
+              return (
+                <div
+                  key={c.id}
+                  style={{
+                    flex: '1 1 0',
+                    maxWidth: 660,
+                    minWidth: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 'clamp(6px, 1vw, 14px)',
+                  }}
+                >
+                  <motion.button
+                    type="button"
+                    onClick={() => togglePick(c.id)}
+                    aria-pressed={selected}
+                    aria-label={`Select ${c.label.toLowerCase()}`}
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: [0, -8, 0], opacity: 1 }}
+                    transition={{
+                      y: {
+                        duration: 2.8 + i * 0.3,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: i * 0.2,
+                      },
+                      opacity: { duration: 0.5, delay: i * 0.08 },
+                    }}
+                    whileHover={{ scale: 1.06, y: -12 }}
+                    whileTap={{ scale: 0.96 }}
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src={c.src}
+                      alt={c.label}
+                      onError={(e) => { e.currentTarget.style.opacity = '0.15' }}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        userSelect: 'none',
+                        pointerEvents: 'none',
+                        transform: selected ? 'scale(1.04)' : 'scale(1)',
+                        transition: 'transform 0.25s ease',
+                      }}
+                      draggable={false}
+                    />
+                  </motion.button>
+
+                  <button
+                    type="button"
+                    onClick={() => togglePick(c.id)}
+                    aria-pressed={selected}
+                    style={{
+                      padding: '6px 18px',
+                      borderRadius: 999,
+                      border: `1.5px solid ${THEME.ink}`,
+                      background: selected ? THEME.ink : THEME.pillBg,
+                      color: selected ? THEME.pillBg : THEME.ink,
+                      fontFamily: 'Archivo Black, Inter, sans-serif',
+                      fontSize: 11,
+                      letterSpacing: '0.12em',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s ease',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {c.label}
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Auth modal — framer-motion OK here, only mounts on user action */}
+        {/* CTA row */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 16,
+          alignItems: 'center', justifyContent: 'center',
+          marginTop: 32,
+        }}>
+          <button
+            onClick={handleStart}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 12,
+              height: 60, padding: '0 32px',
+              borderRadius: 999,
+              border: `2.5px solid ${THEME.ink}`,
+              background: THEME.ink,
+              color: THEME.pillBg,
+              fontFamily: 'Archivo Black, Inter, sans-serif',
+              fontSize: 13, letterSpacing: '0.12em',
+              cursor: 'pointer',
+              boxShadow: `5px 5px 0 0 ${THEME.ink}`,
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translate(-2px,-2px)'
+              e.currentTarget.style.boxShadow = `7px 7px 0 0 ${THEME.ink}`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none'
+              e.currentTarget.style.boxShadow = `5px 5px 0 0 ${THEME.ink}`
+            }}
+          >
+            {hasPicked ? `START WITH ${picked.size}` : 'START MY SEARCH'}
+            <ArrowRight size={18} strokeWidth={3} />
+          </button>
+        </div>
+      </main>
+
       <AnimatePresence>
         {modal && (
           <AuthModal

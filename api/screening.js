@@ -1,54 +1,9 @@
 // Vercel serverless function — screening agent proxy.
 // The API key lives here on the server; it is never sent to the browser.
 
-const SYSTEM_PROMPT = `You are a warm, intelligent real estate screening agent for Estato — an AI-powered platform that matches people with flats and flatmates in Spain.
+import { loadSkill } from '../src/lib/loadSkill.js'
 
-Your job is to conduct a friendly, natural conversation to understand what the user is looking for. You are not filling out a form — you are having a conversation. Be concise, warm, and human.
-
-CONVERSATION RULES:
-- Ask only one question at a time, never multiple
-- Acknowledge the user's answer briefly before asking the next question
-- If an answer is vague or incomplete, ask one natural follow-up before moving on
-- Use the user's previous answers to make later questions feel personalised
-- Do not list options unless the user seems unsure — let them answer naturally first
-- Keep your messages short — 1 to 3 sentences maximum
-
-QUESTION ORDER — collect these in sequence:
-1. Which city are they moving to, and do they have preferred neighbourhoods?
-2. What is their move-in timeline? (within 30 days / 1-3 months / just exploring)
-3. What is their monthly budget, all bills included? (capture min and max if they give a range)
-4. Are they looking for a whole flat or a room in a shared flat?
-5. How many bedrooms do they need? (or are they open to a studio?)
-6. Who will be living there? (just them, a couple, bringing their own flatmate)
-7. What are their must-haves? (probe for: lift, balcony or terrace, furnished, pets allowed, parking, natural light, recently renovated)
-8. Where do they need to commute to most days? (get a specific area or address)
-9. Have they already seen flats that did not work? What was wrong with them? (this captures deal-breakers)
-10. If they are open to a shared flat: what matters to them in a flatmate? (lifestyle, cleanliness, schedule, smoker or not, pets)
-
-LIVE PROPERTY FILTER — After every regular response, append a compact <partial_profile> tag on one line containing only the fields confirmed so far (null = not yet known). This tag is stripped before display — it feeds the live property panel only. Update it as you learn more each turn:
-
-<partial_profile>{"city":null,"neighbourhoods":[],"budget":{"min":null,"max":null},"isForRent":null,"bedrooms":null,"petFriendly":null,"parking":null,"outdoor":null,"nearTransport":null}</partial_profile>
-
-Rules: "bedrooms" is an integer (0 = studio). "isForRent" is true for renting, false for buying, null if unknown. Only include <partial_profile> on regular messages, not on the <screening_complete> message.
-
-COMPLETION:
-Once you have collected all required fields, write a single warm closing sentence acknowledging you have everything you need, then immediately output the structured profile in this exact format with no additional text after it:
-
-<screening_complete>
-{
-  "city": "",
-  "neighbourhoods": [],
-  "move_in_timeline": "",
-  "budget": { "min": 0, "max": 0 },
-  "flat_type": "",
-  "bedrooms": "",
-  "occupants": "",
-  "must_haves": [],
-  "commute_anchor": "",
-  "deal_breakers": [],
-  "flatmate_preferences": {}
-}
-</screening_complete>`
+const SYSTEM_PROMPT = loadSkill('screening-agent')
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -74,44 +29,72 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
+        stream: true,
         system: SYSTEM_PROMPT,
         messages,
       }),
     })
 
-    const data = await upstream.json()
-
     if (!upstream.ok) {
+      const data = await upstream.json()
       return res.status(upstream.status).json(data)
     }
 
-    const rawContent = data.content?.[0]?.text ?? ''
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
 
-    // Extract and strip partial_profile (present in non-final messages)
+    let fullText = ''
+    const reader = upstream.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop()
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const raw = line.slice(6)
+        if (raw === '[DONE]') continue
+        try {
+          const event = JSON.parse(raw)
+          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+            const text = event.delta.text
+            fullText += text
+            res.write(`data: ${JSON.stringify({ type: 'delta', text })}\n\n`)
+          }
+        } catch {}
+      }
+    }
+
+    // Parse full accumulated text for metadata
     let partial = null
-    const partialMatch = rawContent.match(/<partial_profile>([\s\S]*?)<\/partial_profile>/)
+    const partialMatch = fullText.match(/<partial_profile>([\s\S]*?)<\/partial_profile>/)
     if (partialMatch) {
       try { partial = JSON.parse(partialMatch[1].trim()) } catch {}
     }
-    const content = rawContent.replace(/<partial_profile>[\s\S]*?<\/partial_profile>/g, '').trim()
+    const content = fullText.replace(/<partial_profile>[\s\S]*?<\/partial_profile>/g, '').trim()
 
-    // Detect completion
     const completeMatch = content.match(/<screening_complete>([\s\S]*?)<\/screening_complete>/)
-
     if (completeMatch) {
       try {
         const profile = JSON.parse(completeMatch[1].trim())
         const message = content.slice(0, content.indexOf('<screening_complete>')).trim()
-        return res.status(200).json({ type: 'complete', profile, message })
-      } catch {
-        // JSON parse failed — treat as regular message
-      }
+        res.write(`data: ${JSON.stringify({ type: 'complete', profile, message })}\n\n`)
+        return res.end()
+      } catch {}
     }
 
-    return res.status(200).json({ type: 'message', message: content, partial })
+    res.write(`data: ${JSON.stringify({ type: 'done', message: content, partial })}\n\n`)
+    res.end()
   } catch (err) {
-    return res.status(500).json({ error: err.message })
+    try { res.status(500).json({ error: err.message }) } catch { res.end() }
   }
 }

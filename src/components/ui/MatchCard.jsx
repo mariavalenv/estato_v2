@@ -1,5 +1,47 @@
-import { useState } from 'react'
-import { CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, Bed, Clock, MapPin } from 'lucide-react'
+import { useState, memo } from 'react'
+import { CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, Bed, Clock, MapPin, MessageCircle, Users } from 'lucide-react'
+
+/* ── Chat shortcut + interested badge ─────────────────────────────
+   Rendered when the user has already messaged the landlord. Replaces
+   the swipe-to-contact affordance with a one-tap link to the chat
+   thread, and surfaces how many other people are interested. */
+function ContactedFooter({ onOpenChat, interestedCount }) {
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2"
+      style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={onOpenChat}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-meta font-medium transition-opacity hover:opacity-85"
+        style={{
+          background: 'var(--accent)',
+          color: '#fff',
+          border: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <MessageCircle size={12} />
+        Open chat
+      </button>
+      {interestedCount > 0 && (
+        <span
+          className="flex items-center gap-1 px-2 py-1 rounded-chip text-meta"
+          title={`${interestedCount} ${interestedCount === 1 ? 'person is' : 'people are'} interested in this flat`}
+          style={{
+            background: 'var(--background)',
+            color: 'var(--text-secondary)',
+            border: '1px solid rgba(0,0,0,0.06)',
+          }}
+        >
+          <Users size={11} />
+          {interestedCount} interested
+        </span>
+      )}
+    </div>
+  )
+}
 
 // ── Listing card data shape ─────────────────────────────────────
 // {
@@ -60,11 +102,31 @@ function ImageCarousel({ images = [], alt = '' }) {
 
   return (
     <div className="relative w-full h-48 overflow-hidden rounded-t-card">
-      <img
-        src={images[idx]}
-        alt={alt}
-        className="w-full h-full object-cover transition-opacity duration-200"
-      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(135deg, #1A1A22 0%, #0F0F14 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Property photo
+        </span>
+      </div>
+      {images[idx] && (
+        <img
+          src={images[idx]}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          onError={(e) => { e.target.style.display = 'none' }}
+          className="w-full h-full object-cover transition-opacity duration-200"
+          style={{ position: 'relative', zIndex: 1 }}
+        />
+      )}
       {images.length > 1 && (
         <>
           <button
@@ -97,22 +159,34 @@ function ImageCarousel({ images = [], alt = '' }) {
   )
 }
 
-export function MatchCard({ card, density = 'standard' }) {
+export const MatchCard = memo(function MatchCard({ card, density = 'standard', onSelect, onOpenChat }) {
   const isListing = card.type === 'listing'
   const imgs = card.images || [card.image]
+  // Show the chat shortcut whenever the parent passed a callback (it only does
+  // so when a conversation already exists for this listing).
+  const showChatShortcut = isListing && Boolean(onOpenChat)
 
   /* ── MINIMAL ─────────────────────────────────── */
   if (density === 'minimal') {
     return (
       <div
         className="relative rounded-card overflow-hidden shadow-card flex-1 min-w-0"
-        style={{ background: 'var(--surface)' }}
+        style={{ background: 'var(--surface)', cursor: onSelect ? 'pointer' : undefined }}
+        onClick={onSelect}
       >
-        <img
-          src={card.image}
-          alt={isListing ? card.neighbourhood : card.name}
-          className="w-full h-52 object-cover"
-        />
+        <div style={{ position: 'relative', width: '100%', height: 208, background: 'linear-gradient(135deg, #1A1A22 0%, #0F0F14 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Property photo</span>
+          {card.image && (
+            <img
+              src={card.image}
+              alt={isListing ? card.neighbourhood : card.name}
+              loading="lazy"
+              decoding="async"
+              onError={(e) => { e.target.style.display = 'none' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          )}
+        </div>
         <div
           className="absolute inset-x-0 bottom-0 px-4 py-3"
           style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)' }}
@@ -148,33 +222,42 @@ export function MatchCard({ card, density = 'standard' }) {
     return (
       <div
         className="rounded-card overflow-hidden shadow-card flex-1 min-w-0"
-        style={{ background: 'var(--surface)' }}
+        style={{ background: 'var(--surface)', cursor: onSelect ? 'pointer' : undefined }}
+        onClick={onSelect}
       >
         <div className="relative">
-          <img
-            src={card.image}
-            alt={isListing ? card.neighbourhood : card.name}
-            className="w-full h-44 object-cover"
-          />
+          <div style={{ position: 'relative', width: '100%', height: 180, background: 'linear-gradient(135deg, #1A1A22 0%, #0F0F14 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Property photo</span>
+            {card.image && (
+              <img
+                src={card.image}
+                alt={isListing ? card.neighbourhood : card.name}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => { e.target.style.display = 'none' }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            )}
+          </div>
           <div className="absolute top-3 right-3">
             <MatchBadge pct={card.matchPct} />
           </div>
         </div>
-        <div className="p-4 flex flex-col gap-3">
+        <div className="p-3 flex flex-col gap-2">
           {isListing ? (
             <div>
-              <p className="font-semibold text-heading" style={{ color: 'var(--text-primary)' }}>
+              <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                 {card.price}
               </p>
-              <div className="flex items-center gap-3 mt-1 text-meta" style={{ color: 'var(--text-secondary)' }}>
+              <div className="flex items-center gap-2 mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <span className="flex items-center gap-1">
-                  <MapPin size={11} /> {card.neighbourhood}
+                  <MapPin size={10} /> {card.neighbourhood}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Bed size={11} /> {card.beds}
+                  <Bed size={10} /> {card.beds}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Clock size={11} /> {card.commute}
+                  <Clock size={10} /> {card.commute}
                 </span>
               </div>
             </div>
@@ -204,8 +287,8 @@ export function MatchCard({ card, density = 'standard' }) {
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <p className="text-meta font-medium" style={{ color: 'var(--text-secondary)' }}>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
               Matched because:
             </p>
             {card.reasons.slice(0, 3).map((r) => (
@@ -213,6 +296,9 @@ export function MatchCard({ card, density = 'standard' }) {
             ))}
           </div>
         </div>
+        {showChatShortcut && (
+          <ContactedFooter onOpenChat={onOpenChat} interestedCount={card.interestedCount ?? 0} />
+        )}
       </div>
     )
   }
@@ -221,7 +307,8 @@ export function MatchCard({ card, density = 'standard' }) {
   return (
     <div
       className="rounded-card overflow-hidden shadow-card flex-1 min-w-0"
-      style={{ background: 'var(--surface)' }}
+      style={{ background: 'var(--surface)', cursor: onSelect ? 'pointer' : undefined }}
+      onClick={onSelect}
     >
       <div className="relative">
         <ImageCarousel images={imgs} alt={isListing ? card.neighbourhood : card.name} />
@@ -309,6 +396,9 @@ export function MatchCard({ card, density = 'standard' }) {
           </div>
         )}
       </div>
+      {showChatShortcut && (
+        <ContactedFooter onOpenChat={onOpenChat} interestedCount={card.interestedCount ?? 0} />
+      )}
     </div>
   )
-}
+})
